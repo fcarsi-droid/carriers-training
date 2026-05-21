@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 export default function AdminPage() {
   const [users, setUsers] = useState([])
   const [name, setName] = useState('')
-  const [email, setEmail] = useState('')
+  const [username, setUsername] = useState('')
   const [tempPw, setTempPw] = useState('')
   const [resetId, setResetId] = useState(null)
   const [resetPw, setResetPw] = useState('')
@@ -34,10 +34,10 @@ export default function AdminPage() {
     const res = await fetch('/api/admin/users', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${getToken()}` },
-      body: JSON.stringify({ name, email, temp_password: tempPw })
+      body: JSON.stringify({ name, username, temp_password: tempPw })
     })
     const data = await res.json()
-    if (res.ok) { setMsg(`User ${data.user.email} created.`); setName(''); setEmail(''); setTempPw(''); fetchUsers() }
+    if (res.ok) { setMsg(`User ${data.user.username} created.`); setName(''); setUsername(''); setTempPw(''); fetchUsers() }
     else setError(data.error)
     setLoading(false)
   }
@@ -71,19 +71,18 @@ export default function AdminPage() {
       </header>
 
       <div className="max-w-5xl mx-auto px-6 py-10 space-y-8">
-
-        {/* Create user */}
         <div className="bg-white rounded-2xl shadow-sm p-8">
           <h2 className="text-lg font-bold text-[#003865] mb-6">Create New User</h2>
-          <form onSubmit={createUser} className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <form onSubmit={createUser} className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div>
               <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Full Name</label>
               <input value={name} onChange={e => setName(e.target.value)} required
                 className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#0078C8]" />
             </div>
             <div>
-              <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Email</label>
-              <input type="email" value={email} onChange={e => setEmail(e.target.value)} required
+              <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Username</label>
+              <input value={username} onChange={e => setUsername(e.target.value)} required
+                placeholder="nome.sobrenome"
                 className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#0078C8]" />
             </div>
             <div>
@@ -91,18 +90,21 @@ export default function AdminPage() {
               <input value={tempPw} onChange={e => setTempPw(e.target.value)} required minLength={6}
                 className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#0078C8]" />
             </div>
-            <div className="md:col-span-3">
+            <div className="flex items-end">
               <button type="submit" disabled={loading}
-                className="bg-[#003865] hover:bg-[#0078C8] text-white font-semibold px-6 py-2 rounded-lg transition disabled:opacity-50">
-                {loading ? 'Creating...' : 'Create User'}
+                className="w-full bg-[#003865] hover:bg-[#0078C8] text-white font-semibold px-4 py-2 rounded-lg transition disabled:opacity-50">
+                {loading ? 'Creating...' : 'Create'}
               </button>
-              {msg && <span className="ml-4 text-green-600 text-sm">{msg}</span>}
-              {error && <span className="ml-4 text-red-500 text-sm">{error}</span>}
             </div>
+            {(msg || error) && (
+              <div className="md:col-span-4">
+                {msg && <span className="text-green-600 text-sm">{msg}</span>}
+                {error && <span className="text-red-500 text-sm">{error}</span>}
+              </div>
+            )}
           </form>
         </div>
 
-        {/* Users list */}
         <div className="bg-white rounded-2xl shadow-sm p-8">
           <h2 className="text-lg font-bold text-[#003865] mb-6">Users & Results</h2>
           <div className="overflow-x-auto">
@@ -110,7 +112,7 @@ export default function AdminPage() {
               <thead>
                 <tr className="text-xs font-semibold text-gray-400 uppercase tracking-wide border-b">
                   <th className="text-left pb-3">Name</th>
-                  <th className="text-left pb-3">Email</th>
+                  <th className="text-left pb-3">Username</th>
                   <th className="text-left pb-3">Status</th>
                   <th className="text-left pb-3">Language</th>
                   <th className="text-left pb-3">Completed</th>
@@ -121,7 +123,7 @@ export default function AdminPage() {
                 {users.map(u => (
                   <tr key={u.id} className="hover:bg-gray-50">
                     <td className="py-3 font-medium text-[#003865]">{u.name}</td>
-                    <td className="py-3 text-gray-500">{u.email}</td>
+                    <td className="py-3 text-gray-500">{u.username}</td>
                     <td className="py-3">{statusBadge(u)}</td>
                     <td className="py-3 text-gray-400">{u.language ? u.language.toUpperCase() : '—'}</td>
                     <td className="py-3 text-gray-400 text-xs">{u.completed_at ? new Date(u.completed_at).toLocaleDateString() : '—'}</td>
@@ -136,7 +138,6 @@ export default function AdminPage() {
           </div>
         </div>
 
-        {/* Reset password modal */}
         {resetId && (
           <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
             <div className="bg-white rounded-2xl p-8 w-full max-w-sm shadow-2xl">

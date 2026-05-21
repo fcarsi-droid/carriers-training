@@ -3,7 +3,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 
 export default function LoginPage() {
-  const [email, setEmail] = useState('')
+  const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
@@ -17,7 +17,7 @@ export default function LoginPage() {
       const res = await fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password })
+        body: JSON.stringify({ username, password })
       })
       const data = await res.json()
       if (!res.ok) { setError(data.error); setLoading(false); return }
@@ -43,8 +43,9 @@ export default function LoginPage() {
         </div>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Email</label>
-            <input type="email" value={email} onChange={e => setEmail(e.target.value)} required
+            <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Username</label>
+            <input type="text" value={username} onChange={e => setUsername(e.target.value)} required
+              placeholder="nome.sobrenome"
               className="w-full border border-gray-200 rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-[#0078C8] focus:ring-2 focus:ring-[#E8F3FB]" />
           </div>
           <div>

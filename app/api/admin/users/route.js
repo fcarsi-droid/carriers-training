@@ -12,7 +12,7 @@ function isAdmin(req) {
 export async function GET(req) {
   if (!isAdmin(req)) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
   const res = await query(`
-    SELECT u.id, u.name, u.email, u.role, u.temp_password, u.created_at,
+    SELECT u.id, u.name, u.username, u.role, u.temp_password, u.created_at,
       qr.score, qr.passed, qr.language, qr.completed_at
     FROM users u
     LEFT JOIN LATERAL (
@@ -27,15 +27,15 @@ export async function GET(req) {
 export async function POST(req) {
   if (!isAdmin(req)) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
   try {
-    const { name, email, temp_password } = await req.json()
+    const { name, username, temp_password } = await req.json()
     const hash = await bcrypt.hash(temp_password, 10)
     const res = await query(
-      'INSERT INTO users (name, email, password_hash, temp_password, role) VALUES ($1, $2, $3, TRUE, $4) RETURNING id, name, email',
-      [name, email.toLowerCase(), hash, 'user']
+      'INSERT INTO users (name, username, password_hash, temp_password, role) VALUES ($1, $2, $3, TRUE, $4) RETURNING id, name, username',
+      [name, username.toLowerCase(), hash, 'user']
     )
     return NextResponse.json({ user: res.rows[0] })
   } catch (e) {
-    if (e.code === '23505') return NextResponse.json({ error: 'Email already exists' }, { status: 400 })
+    if (e.code === '23505') return NextResponse.json({ error: 'Username already exists' }, { status: 400 })
     return NextResponse.json({ error: 'Server error' }, { status: 500 })
   }
 }
