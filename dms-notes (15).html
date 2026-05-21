@@ -1,0 +1,2553 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DMS Notes</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@400;600;700;800&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+:root{
+  --bg:#F5F7FA;--surface:#FFFFFF;--surface2:#EEF2F7;--border:#D0D9E8;
+  --accent:#003087;--accent2:#E85D04;--accent-light:#0066CC;
+  --green:#1A7F4B;--green-bg:#E8F5EE;--green-border:#A8D5BB;
+  --yellow:#B45309;--yellow-bg:#FEF3C7;--yellow-border:#FCD34D;
+  --red:#C0392B;--red-bg:#FDEAEA;--red-border:#F5A9A9;
+  --purple:#6B21A8;--purple-bg:#F3E8FF;--purple-border:#C4B5FD;
+  --orange:#C2410C;--orange-bg:#FFF0E6;--orange-border:#FDB08A;
+  --text:#1A2333;--muted:#6B7A99;--muted2:#9AA3B8;
+  --mono:'DM Mono',monospace;--sans:'Inter',sans-serif;--display:'Syne',sans-serif;
+  --shadow:0 1px 3px rgba(0,48,135,0.08),0 1px 2px rgba(0,48,135,0.04);
+  --shadow-md:0 4px 12px rgba(0,48,135,0.1),0 2px 6px rgba(0,48,135,0.06);
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:100vh;overflow-x:hidden;font-size:14px;}
+
+/* ── SETUP SCREEN ── */
+#setup-screen{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;z-index:100;background:var(--bg);}
+.setup-box{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:48px;width:500px;box-shadow:var(--shadow-md);}
+.setup-header{display:flex;align-items:center;gap:14px;margin-bottom:32px;padding-bottom:24px;border-bottom:2px solid var(--border);}
+.setup-tp-logo{background:var(--accent);color:#fff;font-family:var(--display);font-size:13px;font-weight:800;letter-spacing:2px;padding:8px 14px;border-radius:4px;}
+.setup-title{font-family:var(--display);font-size:22px;font-weight:800;color:var(--accent);letter-spacing:0.5px;}
+.setup-sub{font-size:12px;color:var(--muted);margin-top:2px;}
+.setup-section{margin-bottom:24px;}
+.setup-label{font-family:var(--mono);font-size:10px;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin-bottom:10px;display:block;}
+.lang-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
+.factory-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;}
+.select-btn{background:var(--bg);border:2px solid var(--border);color:var(--muted);font-family:var(--sans);font-size:13px;font-weight:500;padding:12px 16px;cursor:pointer;transition:all 0.2s;text-align:left;border-radius:8px;}
+.select-btn:hover{border-color:var(--accent-light);color:var(--accent);background:#F0F4FF;}
+.select-btn.selected{border-color:var(--accent);color:var(--accent);background:#EEF3FF;font-weight:600;}
+.factory-flag{font-size:11px;color:var(--muted);margin-top:3px;font-weight:400;}
+.setup-name-section{margin-bottom:24px;}
+.setup-input{width:100%;background:var(--bg);border:2px solid var(--border);color:var(--text);font-family:var(--sans);font-size:14px;padding:12px 16px;outline:none;transition:border-color 0.2s;border-radius:8px;}
+.setup-input:focus{border-color:var(--accent);}
+.btn-enter{width:100%;background:var(--accent);color:#fff;border:none;font-family:var(--display);font-weight:700;font-size:13px;letter-spacing:1px;text-transform:uppercase;padding:16px;cursor:pointer;transition:all 0.2s;border-radius:8px;}
+.btn-enter:hover{background:#004CC7;}
+.btn-enter:disabled{opacity:0.35;cursor:not-allowed;}
+
+/* ── APP ── */
+#app{display:none;position:relative;z-index:1;}
+
+/* ── HEADER ── */
+.header{display:flex;align-items:center;justify-content:space-between;padding:0 24px;height:52px;border-bottom:3px solid var(--accent);background:var(--accent);position:sticky;top:0;z-index:50;box-shadow:0 2px 8px rgba(0,48,135,0.2);}
+.header-left{display:flex;align-items:center;gap:16px;}
+.logo{font-family:var(--display);font-size:16px;font-weight:800;color:#fff;letter-spacing:1px;}
+.logo span{color:rgba(255,255,255,0.6);font-weight:400;}
+.factory-badge{font-family:var(--mono);font-size:10px;letter-spacing:1px;color:var(--accent);background:#fff;padding:4px 10px;border-radius:20px;font-weight:700;}
+.header-date{font-family:var(--mono);font-size:11px;color:rgba(255,255,255,0.7);}
+.user-badge{display:flex;align-items:center;gap:8px;font-family:var(--mono);font-size:11px;color:rgba(255,255,255,0.85);}
+.user-dot{width:7px;height:7px;border-radius:50%;background:#4ADE80;animation:pulse 2s infinite;}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
+.btn-logout{background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.3);color:#fff;font-family:var(--mono);font-size:10px;letter-spacing:1px;padding:5px 12px;cursor:pointer;transition:all 0.2s;text-transform:uppercase;border-radius:4px;}
+.btn-logout:hover{background:rgba(255,255,255,0.25);}
+
+/* ── NAV ── */
+.nav{display:flex;padding:0 24px;border-bottom:1px solid var(--border);background:var(--surface);overflow-x:auto;box-shadow:var(--shadow);}
+.nav-tab{font-family:var(--sans);font-size:12px;font-weight:500;color:var(--muted);padding:12px 14px;cursor:pointer;border-bottom:3px solid transparent;transition:all 0.2s;white-space:nowrap;}
+.nav-tab:hover{color:var(--accent);background:var(--bg);}
+.nav-tab.active{color:var(--accent);border-bottom-color:var(--accent);font-weight:600;}
+
+/* ── IMPORT BAR ── */
+.import-bar{display:flex;align-items:center;gap:8px;padding:8px 24px;background:var(--surface);border-bottom:1px solid var(--border);flex-wrap:wrap;}
+.import-label{font-family:var(--mono);font-size:10px;letter-spacing:1px;color:var(--muted);text-transform:uppercase;white-space:nowrap;}
+.import-btn{background:var(--bg);border:1px solid var(--border);color:var(--muted);font-family:var(--sans);font-size:11px;font-weight:500;padding:6px 10px;cursor:pointer;text-transform:none;transition:all 0.2s;white-space:nowrap;position:relative;overflow:hidden;border-radius:6px;}
+.import-btn:hover{border-color:var(--accent-light);color:var(--accent-light);background:#F0F4FF;}
+.import-btn.loaded{border-color:var(--green);color:var(--green);background:var(--green-bg);}
+.import-btn input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;}
+.import-divider{width:1px;height:18px;background:var(--border);flex-shrink:0;}
+.import-status{font-family:var(--mono);font-size:10px;color:var(--muted);}
+.import-status.ok{color:var(--green);}
+.import-status.warn{color:var(--yellow);}
+
+/* ── MAIN ── */
+.main{padding:20px 24px;max-width:1500px;margin:0 auto;}
+.panel-hidden{display:none;}
+
+/* ── STATS ── */
+.stats-row{display:grid;grid-template-columns:repeat(5,1fr);gap:16px;margin-bottom:24px;}
+.stat-card{background:var(--surface);border:1px solid var(--border);padding:20px;position:relative;cursor:pointer;transition:all 0.2s;border-radius:10px;box-shadow:var(--shadow);}
+.stat-card:hover{box-shadow:var(--shadow-md);transform:translateY(-2px);}
+.stat-card.blue{border-top:4px solid var(--accent);}
+.stat-card.green{border-top:4px solid var(--green);}
+.stat-card.red{border-top:4px solid var(--red);}
+.stat-card.orange{border-top:4px solid var(--orange);}
+.stat-card.purple{border-top:4px solid var(--purple);}
+.stat-label{font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;}
+.stat-value{font-family:var(--display);font-size:36px;font-weight:800;line-height:1;}
+.stat-card.blue .stat-value{color:var(--accent);}
+.stat-card.green .stat-value{color:var(--green);}
+.stat-card.red .stat-value{color:var(--red);}
+.stat-card.orange .stat-value{color:var(--orange);}
+.stat-card.purple .stat-value{color:var(--purple);}
+.stat-sub{font-size:11px;color:var(--muted);margin-top:5px;}
+.stat-hint{font-size:10px;color:var(--muted2);margin-top:6px;font-weight:500;}
+.stat-card:hover .stat-hint{color:var(--accent-light);}
+
+/* ── SHIPPED INLINE LIST ── */
+.shipped-inline{margin-top:12px;border-top:1px solid var(--border);padding-top:10px;}
+.shipped-inline-row{display:flex;align-items:center;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--bg);font-size:11px;}
+.shipped-inline-row:last-child{border-bottom:none;}
+.shipped-do{font-family:var(--mono);font-size:10px;color:var(--accent);font-weight:600;}
+.shipped-client{color:var(--text);font-weight:500;flex:1;margin:0 8px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.shipped-time{font-family:var(--mono);font-size:10px;color:var(--muted);}
+
+/* ── ALERTS ── */
+.alert-banner{background:var(--red-bg);border:1px solid var(--red-border);border-left:4px solid var(--red);padding:12px 16px;margin-bottom:8px;font-size:13px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;border-radius:6px;}
+.alert-warn{background:var(--yellow-bg);border:1px solid var(--yellow-border);border-left:4px solid var(--yellow);padding:12px 16px;margin-bottom:8px;font-size:13px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;border-radius:6px;}
+
+/* ── RESCHEDULE CARDS ── */
+.reschedule-strip{margin-bottom:20px;}
+.reschedule-strip-title{font-size:12px;font-weight:700;color:var(--orange);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px;display:flex;align-items:center;gap:8px;}
+.reschedule-strip-title::before{content:'';width:10px;height:2px;background:var(--orange);}
+.reschedule-cards{display:flex;gap:12px;flex-wrap:wrap;}
+.reschedule-card{background:var(--orange-bg);border:1px solid var(--orange-border);border-left:4px solid var(--accent2);padding:14px 18px;min-width:240px;max-width:300px;position:relative;border-radius:8px;}
+.rc-badge{font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--accent2);background:rgba(232,93,4,0.15);padding:2px 8px;display:inline-block;margin-bottom:8px;border-radius:3px;}
+.rc-do{font-family:var(--mono);font-size:13px;color:var(--accent);font-weight:600;margin-bottom:3px;}
+.rc-client{font-size:12px;font-weight:600;color:var(--text);margin-bottom:8px;}
+.rc-dates{display:flex;align-items:center;gap:8px;margin-bottom:6px;}
+.rc-old-date{font-family:var(--mono);font-size:11px;color:var(--muted);text-decoration:line-through;}
+.rc-arrow{color:var(--accent2);}
+.rc-new-date{font-family:var(--mono);font-size:11px;color:var(--accent2);font-weight:600;}
+.rc-message{font-size:11px;color:var(--orange);font-weight:500;margin-bottom:6px;}
+.rc-by{font-size:10px;color:var(--muted);}
+.rc-dismiss{position:absolute;top:10px;right:12px;background:none;border:none;color:var(--muted);cursor:pointer;font-size:16px;font-weight:300;}
+.rc-dismiss:hover{color:var(--red);}
+
+/* ── SECTION HEADER ── */
+.section-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:8px;}
+.section-title{font-size:14px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:0.5px;display:flex;align-items:center;gap:8px;}
+.section-title::before{content:'';width:4px;height:18px;background:var(--accent);border-radius:2px;}
+
+/* ── BUTTONS ── */
+.btn-add{background:var(--accent);border:none;color:#fff;font-family:var(--sans);font-size:12px;font-weight:600;padding:8px 16px;cursor:pointer;text-transform:none;transition:all 0.2s;border-radius:6px;letter-spacing:0;}
+.btn-add:hover{background:#004CC7;}
+.btn-icon{background:var(--bg);border:1px solid var(--border);color:var(--text);font-size:12px;padding:6px 12px;cursor:pointer;transition:all 0.2s;font-family:var(--sans);white-space:nowrap;border-radius:6px;font-weight:500;}
+.btn-icon:hover{border-color:var(--accent-light);color:var(--accent);background:#F0F4FF;}
+.btn-icon.danger:hover{border-color:var(--red);color:var(--red);background:var(--red-bg);}
+.btn-ship-all{font-size:12px;font-weight:600;padding:6px 14px;background:var(--green-bg);border:1px solid var(--green-border);color:var(--green);cursor:pointer;transition:all 0.2s;border-radius:6px;}
+.btn-ship-all:hover{background:var(--green);color:#fff;}
+
+/* ── DAY GROUP ── */
+.day-group{margin-bottom:14px;border:1px solid var(--border);overflow:hidden;border-radius:10px;box-shadow:var(--shadow);}
+.day-header{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;background:var(--surface);cursor:pointer;transition:background 0.2s;user-select:none;flex-wrap:wrap;gap:8px;}
+.day-header:hover{background:var(--surface2);}
+.day-header-left{display:flex;align-items:center;gap:14px;flex-wrap:wrap;}
+.day-label{font-size:15px;font-weight:700;color:var(--text);}
+.day-label.today{color:var(--accent);}
+.day-label.past{color:var(--muted);}
+.day-counts{display:flex;gap:8px;flex-wrap:wrap;}
+.day-count{font-size:11px;font-weight:600;padding:3px 8px;border-radius:20px;}
+.day-count.total{background:#EEF3FF;color:var(--accent);border:1px solid #C7D6F0;}
+.day-count.shipped{background:var(--green-bg);color:var(--green);border:1px solid var(--green-border);cursor:pointer;}
+.day-count.blocked{background:var(--red-bg);color:var(--red);border:1px solid var(--red-border);cursor:pointer;}
+.day-count.rescheduled{background:var(--orange-bg);color:var(--orange);border:1px solid var(--orange-border);cursor:pointer;}
+.day-count.unplanned{background:var(--surface2);color:var(--muted);border:1px solid var(--border);cursor:pointer;}
+.day-toggle{font-size:12px;color:var(--muted);display:flex;align-items:center;gap:5px;font-weight:500;}
+.day-toggle-icon{transition:transform 0.2s;font-size:14px;}
+.day-body{overflow:hidden;transition:max-height 0.3s ease;}
+.day-body.collapsed{max-height:0!important;}
+
+/* ── SHIPMENT GROUP ── */
+.shipment-group-row td{padding:0;border-bottom:1px solid var(--border);}
+.shipment-group-header{display:flex;align-items:center;justify-content:space-between;padding:10px 16px;flex-wrap:wrap;gap:8px;background:var(--surface2);border-left:4px solid var(--accent);}
+.sg-left{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+.sg-right{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+.sg-id{font-family:var(--mono);font-size:12px;color:var(--accent);font-weight:700;}
+.sg-id.unplanned-id{color:var(--muted);}
+.sg-count{font-size:11px;color:var(--muted);font-weight:500;}
+.sg-carrier{font-size:12px;font-weight:600;color:var(--text);}
+.sg-badge{font-size:10px;font-weight:600;letter-spacing:0.5px;text-transform:uppercase;padding:3px 10px;border-radius:20px;}
+.sg-badge.shipped{background:var(--green-bg);color:var(--green);border:1px solid var(--green-border);}
+.sg-badge.blocked{background:var(--red-bg);color:var(--red);border:1px solid var(--red-border);}
+.carrier-accepted{font-size:11px;color:var(--green);font-weight:600;}
+.carrier-pending-txt{font-size:11px;color:var(--yellow);font-weight:600;}
+.carrier-enroute{font-size:11px;color:var(--accent-light);font-weight:600;}
+.carrier-track{font-size:11px;color:var(--accent-light);text-decoration:underline;font-weight:500;}
+.not-planned{font-size:11px;color:var(--muted);font-style:italic;}
+.appt-time{font-size:11px;color:var(--orange);font-weight:700;background:var(--orange-bg);padding:2px 8px;border-radius:4px;border:1px solid var(--orange-border);}
+
+/* ── TABLE ── */
+.table-wrapper{overflow-x:auto;width:100%;}
+.do-table{width:100%;border-collapse:collapse;}
+.do-table th{font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;text-align:left;padding:10px 12px;border-bottom:2px solid var(--border);white-space:nowrap;background:var(--surface2);}
+.do-table td{padding:10px 12px;border-bottom:1px solid var(--border);font-size:13px;vertical-align:middle;}
+.do-table tr:last-child td{border-bottom:none;}
+.do-table tr:hover td{background:#F8FAFF;}
+.do-row td{background:var(--surface);}
+.rescheduled-row td{background:var(--orange-bg);}
+.do-number{font-family:var(--mono);font-size:12px;color:var(--accent);font-weight:700;white-space:nowrap;}
+.sap-badge{font-size:9px;font-weight:700;text-transform:uppercase;padding:2px 6px;border-radius:3px;margin-left:5px;vertical-align:middle;}
+.sap-badge.ckd{background:var(--green-bg);color:var(--green);border:1px solid var(--green-border);}
+.sap-badge.prcd{background:#EEF3FF;color:var(--accent);border:1px solid #C7D6F0;}
+.sap-badge.new-sap{background:var(--purple-bg);color:var(--purple);border:1px solid var(--purple-border);}
+.do-client{font-weight:600;font-size:13px;color:var(--text);}
+.do-dest{color:var(--muted);font-size:11px;margin-top:2px;}
+.do-product{font-size:11px;color:var(--muted);max-width:180px;line-height:1.4;}
+
+/* ── DATE CELL ── */
+.date-cell{display:flex;flex-direction:column;gap:3px;}
+.date-main{font-size:12px;color:var(--text);font-weight:500;}
+.date-rescheduled{font-size:10px;color:var(--orange);}
+.btn-change-date{font-size:11px;font-weight:600;color:var(--accent-light);background:none;border:1px solid var(--accent-light);padding:3px 10px;cursor:pointer;transition:all 0.2s;margin-top:3px;border-radius:4px;white-space:nowrap;}
+.btn-change-date:hover{background:var(--accent-light);color:#fff;}
+
+/* ── BADGES ── */
+.badge{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:600;padding:4px 10px;border-radius:20px;white-space:nowrap;}
+.badge::before{content:'';width:6px;height:6px;border-radius:50%;}
+.badge-shipped{background:var(--green-bg);color:var(--green);border:1px solid var(--green-border);}
+.badge-shipped::before{background:var(--green);}
+.badge-pending{background:var(--yellow-bg);color:var(--yellow);border:1px solid var(--yellow-border);}
+.badge-pending::before{background:var(--yellow);}
+.badge-blocked{background:var(--red-bg);color:var(--red);border:1px solid var(--red-border);}
+.badge-blocked::before{background:var(--red);}
+.badge-loading{background:#EEF3FF;color:var(--accent-light);border:1px solid #C7D6F0;}
+.badge-loading::before{background:var(--accent-light);}
+.badge-new{background:var(--purple-bg);color:var(--purple);border:1px solid var(--purple-border);}
+.badge-new::before{background:var(--purple);}
+.badge-noshow{background:var(--orange-bg);color:var(--orange);border:1px solid var(--orange-border);}
+.badge-noshow::before{background:var(--orange);}
+.badge-ontime{background:var(--green-bg);color:var(--green);border:1px solid var(--green-border);}
+.badge-ontime::before{background:var(--green);}
+.badge-late{background:var(--red-bg);color:var(--red);border:1px solid var(--red-border);}
+.badge-late::before{background:var(--red);}
+.badge-rejected{background:var(--yellow-bg);color:var(--yellow);border:1px solid var(--yellow-border);}
+.badge-rejected::before{background:var(--yellow);}
+
+/* ── ASSIGNEE ── */
+.assignee{display:inline-block;background:#EEF3FF;border:1px solid #C7D6F0;color:var(--accent);font-size:11px;font-weight:600;padding:2px 8px;margin:2px;border-radius:12px;}
+.note-text{font-size:12px;color:var(--muted);max-width:180px;line-height:1.5;}
+.do-checkbox{width:15px;height:15px;cursor:pointer;accent-color:var(--accent);}
+
+/* ── HISTORY ── */
+.history-toggle{font-size:11px;font-weight:600;color:var(--accent-light);cursor:pointer;text-decoration:none;background:none;border:none;margin-top:4px;display:inline-flex;align-items:center;gap:4px;}
+.history-toggle:hover{text-decoration:underline;}
+.history-log{background:var(--surface2);border:1px solid var(--border);padding:10px;margin-top:6px;display:none;border-radius:6px;}
+.history-log.open{display:block;}
+.history-entry{font-size:11px;padding:5px 0;border-bottom:1px solid var(--border);display:flex;gap:8px;flex-wrap:wrap;}
+.history-entry:last-child{border-bottom:none;}
+.he-time{color:var(--muted);min-width:90px;}
+.he-user{color:var(--accent);min-width:80px;font-weight:600;}
+.he-note{color:var(--text);}
+.he-note.reschedule{color:var(--orange);font-weight:500;}
+
+/* ── MODAL ── */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,48,135,0.35);z-index:200;align-items:center;justify-content:center;backdrop-filter:blur(4px);}
+.modal-overlay.open{display:flex;}
+.modal{background:var(--surface);border:1px solid var(--border);border-top:4px solid var(--accent);padding:32px;width:600px;max-height:88vh;overflow-y:auto;border-radius:0 0 12px 12px;box-shadow:var(--shadow-md);}
+.modal-title{font-family:var(--display);font-size:18px;font-weight:800;margin-bottom:22px;color:var(--accent);}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+.form-group{margin-bottom:14px;}
+.form-group.full{grid-column:1/-1;}
+.form-label{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;display:block;margin-bottom:6px;}
+.form-input,.form-select,.form-textarea{width:100%;background:var(--bg);border:2px solid var(--border);color:var(--text);font-family:var(--sans);font-size:13px;padding:10px 12px;outline:none;transition:border-color 0.2s;border-radius:8px;}
+.form-input:focus,.form-select:focus,.form-textarea:focus{border-color:var(--accent);}
+.form-select{cursor:pointer;}
+.form-textarea{resize:vertical;min-height:75px;}
+.modal-actions{display:flex;gap:10px;margin-top:20px;justify-content:flex-end;}
+.btn-cancel{background:var(--bg);border:2px solid var(--border);color:var(--text);font-family:var(--sans);font-size:13px;font-weight:600;padding:10px 20px;cursor:pointer;transition:all 0.2s;border-radius:8px;}
+.btn-cancel:hover{border-color:var(--muted);}
+.btn-save{background:var(--accent);border:none;color:#fff;font-family:var(--sans);font-weight:700;font-size:13px;padding:10px 22px;cursor:pointer;transition:all 0.2s;border-radius:8px;}
+.btn-save:hover{background:#004CC7;}
+.btn-save.orange{background:var(--accent2);}
+.btn-save.orange:hover{background:#C04A00;}
+.btn-save.purple{background:var(--purple);}
+.btn-save.purple:hover{background:#5B1697;}
+
+/* ── TAG INPUT ── */
+.tag-input-container{display:flex;flex-wrap:wrap;gap:4px;background:var(--bg);border:2px solid var(--border);padding:6px 10px;min-height:42px;align-items:center;cursor:text;border-radius:8px;}
+.tag-input-container:focus-within{border-color:var(--accent);}
+.tag-pill{background:#EEF3FF;border:1px solid #C7D6F0;color:var(--accent);font-size:11px;font-weight:600;padding:3px 8px;display:flex;align-items:center;gap:5px;border-radius:12px;}
+.tag-pill button{background:none;border:none;color:var(--accent);cursor:pointer;font-size:14px;line-height:1;padding:0;}
+.tag-input{background:none;border:none;color:var(--text);font-family:var(--sans);font-size:13px;outline:none;min-width:100px;flex:1;}
+
+/* ── DATE CHANGE MODAL ── */
+.date-change-info{background:var(--surface2);border:1px solid var(--border);padding:14px;margin-bottom:18px;border-radius:8px;}
+.dci-row{display:flex;gap:8px;align-items:center;font-size:13px;margin-bottom:6px;}
+.dci-label{color:var(--muted);font-weight:600;min-width:80px;}
+
+/* ── STAT MODAL ── */
+.stat-modal-wide{width:900px;max-width:95vw;}
+
+/* ── MOVE MODAL ── */
+.move-info{background:var(--surface2);border:1px solid var(--border);padding:14px;margin-bottom:16px;font-size:13px;font-weight:600;border-radius:8px;}
+
+/* ── BULK BAR ── */
+.bulk-bar{display:none;align-items:center;gap:8px;flex-wrap:wrap;background:var(--accent);padding:8px 12px;border-radius:8px;}
+.bulk-bar span{color:#fff;font-size:12px;font-weight:600;}
+.bulk-bar .btn-icon{background:rgba(255,255,255,0.15);border-color:rgba(255,255,255,0.3);color:#fff;}
+.bulk-bar .btn-icon:hover{background:rgba(255,255,255,0.25);}
+.bulk-bar .btn-ship-all{background:#fff;color:var(--green);border-color:#fff;}
+
+/* ── IMPORT RESULT ── */
+.import-result{background:var(--surface2);border:1px solid var(--border);padding:16px;margin-top:14px;border-radius:8px;}
+.import-result-row{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border);font-size:13px;}
+.import-result-row:last-child{border-bottom:none;}
+.imp-new{color:var(--green);font-weight:600;}
+.imp-updated{color:var(--yellow);font-weight:600;}
+
+/* ── AUDIT ── */
+.audit-entry{display:flex;align-items:flex-start;gap:14px;padding:12px 0;border-bottom:1px solid var(--border);}
+.audit-time{font-family:var(--mono);font-size:11px;color:var(--muted);white-space:nowrap;min-width:110px;}
+.audit-user{font-size:12px;color:var(--accent);min-width:120px;font-weight:600;}
+.audit-action{font-size:13px;color:var(--text);}
+.audit-action strong{color:var(--accent);font-weight:700;}
+
+/* ── ARCHIVE ── */
+.btn-clear-db{background:var(--red-bg);border:1px solid var(--red-border);color:var(--red);font-size:12px;font-weight:600;padding:7px 14px;cursor:pointer;transition:all 0.2s;border-radius:6px;}
+.btn-clear-db:hover{background:var(--red);color:#fff;}
+
+/* ── SUMMARY BOX ── */
+.summary-box{background:var(--surface);border:1px solid var(--border);border-left:4px solid var(--accent);padding:14px 20px;margin-bottom:20px;display:flex;gap:24px;flex-wrap:wrap;border-radius:0 8px 8px 0;box-shadow:var(--shadow);}
+.summary-item{font-size:12px;font-weight:500;}
+.summary-item span{color:var(--accent);font-weight:700;}
+
+/* ── EMPTY ── */
+.empty-state{text-align:center;padding:50px 20px;color:var(--muted);}
+.empty-state-icon{font-size:32px;margin-bottom:10px;}
+.empty-state-text{font-size:13px;color:var(--muted);}
+
+/* ── TOOLTIP ── */
+[title]{position:relative;}
+
+::-webkit-scrollbar{width:5px;height:5px;}
+::-webkit-scrollbar-track{background:var(--bg);}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px;}
+::-webkit-scrollbar-thumb:hover{background:var(--muted2);}
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.animate-in{animation:fadeUp 0.2s ease forwards;}
+</style>
+</head>
+<body>
+
+<!-- SETUP SCREEN -->
+<div id="setup-screen">
+  <div class="setup-box">
+    <div class="setup-header">
+      <div class="setup-tp-logo">TETRA PAK</div>
+      <div><div class="setup-title">DMS Notes</div><div class="setup-sub">Daily shipping coordination platform</div></div>
+    </div>
+
+
+    <div class="setup-section">
+      <span class="setup-label" id="lbl-factory">Select your factory / Seleccione su fábrica / Selecione sua fábrica</span>
+      <div class="factory-grid" id="factory-grid" style="min-height:50px;display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+        <button class="select-btn" data-fid="denton" onclick="selectFactoryById(this)">Denton<div class="factory-flag">TX, USA</div></button>
+        <button class="select-btn" data-fid="sikeston" onclick="selectFactoryById(this)">Sikeston<div class="factory-flag">MO, USA</div></button>
+        <button class="select-btn" data-fid="vancouver" onclick="selectFactoryById(this)">Vancouver<div class="factory-flag">WA, USA</div></button>
+        <button class="select-btn" data-fid="louisa" onclick="selectFactoryById(this)">Louisa<div class="factory-flag">VA, USA</div></button>
+        <button class="select-btn" data-fid="mexicali" onclick="selectFactoryById(this)">Mexicali<div class="factory-flag">México</div></button>
+        <button class="select-btn" data-fid="queretaro" onclick="selectFactoryById(this)">Querétaro<div class="factory-flag">México</div></button>
+        <button class="select-btn" data-fid="larioja" onclick="selectFactoryById(this)">La Rioja<div class="factory-flag">Argentina</div></button>
+        <button class="select-btn" data-fid="pontagrossa" onclick="selectFactoryById(this)">Ponta Grossa<div class="factory-flag">PR, Brasil</div></button>
+        <button class="select-btn" data-fid="montemor" onclick="selectFactoryById(this)">Monte Mor<div class="factory-flag">SP, Brasil</div></button>
+      </div>
+    </div>
+
+    <div class="setup-section" id="lang-section" style="display:none;">
+      <span class="setup-label" id="lbl-language">Language / Idioma</span>
+      <div class="lang-grid" id="lang-grid"></div>
+    </div>
+
+    <div class="setup-name-section" id="name-section" style="display:none;">
+      <span class="setup-label" id="lbl-name">Your name</span>
+      <input class="setup-input" id="setup-name" type="text" autocomplete="off">
+    </div>
+
+    <button class="btn-enter" id="btn-enter" disabled onclick="enterSystem()">ENTER SYSTEM</button>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app">
+  <div class="header">
+    <div class="header-left">
+      <div class="logo">DMS<span> Notes</span></div>
+      <div class="factory-badge" id="factory-badge"></div>
+      <div class="header-date" id="header-date"></div>
+    </div>
+    <div style="display:flex;align-items:center;gap:12px;">
+      <div class="user-badge"><div class="user-dot"></div><span id="header-user"></span></div>
+      <button class="btn-logout" onclick="logout()" id="btn-logout">Sign Out</button>
+    </div>
+  </div>
+
+  <div class="nav" id="main-nav"></div>
+
+  <div class="import-bar">
+    <div class="import-label" id="lbl-import">Import:</div>
+    <div style="display:flex;align-items:center;gap:8px;">
+      <div class="import-btn" id="dpl-btn">📋 DPL (.xlsx)<input type="file" accept=".xlsx,.xls" onchange="handleDPLUpload(event)"></div>
+      <div class="import-status" id="dpl-status"></div>
+    </div>
+    <div class="import-divider"></div>
+    <div style="display:flex;align-items:center;gap:8px;">
+      <div class="import-btn" id="ship-btn">🚛 Shipments (.xlsx)<input type="file" accept=".xlsx,.xls" onchange="handleShipmentsUpload(event)"></div>
+      <div class="import-status" id="ship-status"></div>
+    </div>
+    <div class="import-divider"></div>
+    <div class="import-status" id="cross-status"></div>
+    <div class="import-divider"></div>
+    <button class="import-btn" onclick="sendDailyNotes()" style="border-color:rgba(0,230,118,0.4);color:var(--green);" id="btn-daily-notes">📧 Daily Notes</button>
+    <button class="import-btn" onclick="document.getElementById('export-modal').classList.add('open')" style="border-color:rgba(0,102,204,0.4);color:var(--accent-light);">⬇ Export</button>
+  </div>
+
+  <div class="main">
+    <div id="tab-dashboard">
+      <div class="stats-row" id="stats-row"></div>
+      <div id="alerts-container"></div>
+      <div id="reschedule-strip"></div>
+      <div class="section-header">
+        <div class="section-title" id="lbl-loads-by-date">Loads by Date</div>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+          <div class="bulk-bar" id="bulk-bar">
+            <span id="bulk-count" style="font-family:var(--mono);font-size:10px;color:var(--muted);"></span>
+            <button class="btn-ship-all" onclick="bulkUpdateStatus('Shipped')" id="btn-bulk-ship">✓ Shipped</button>
+            <button class="btn-icon" onclick="bulkUpdateStatus('Pending')">Pending</button>
+            <button class="btn-icon danger" onclick="bulkDelete()" id="btn-bulk-del">✕ Delete</button>
+            <button class="btn-icon" onclick="clearSelection()" id="btn-bulk-cancel">Cancel</button>
+          </div>
+          <button class="btn-icon" onclick="toggleSortMode()" id="btn-sort" title="Sort by appointment time">🕐 By Time</button>
+          <button class="btn-icon" onclick="expandAll()" id="btn-expand" title="Expand All">▾ All</button>
+          <button class="btn-icon" onclick="collapseAll()" id="btn-collapse" title="Collapse All">▸ All</button>
+          <button class="btn-add" onclick="openModal()" id="btn-add-do">+ Add DO</button>
+        </div>
+      </div>
+      <div id="days-container"></div>
+    </div>
+
+    <div id="tab-shipped-today" class="panel-hidden">
+      <div class="section-header" style="margin-bottom:20px;">
+        <div class="section-title" id="lbl-shipped-today">Shipped Today</div>
+        <div style="font-family:var(--mono);font-size:10px;color:var(--muted);" id="lbl-shipped-sub">DOs shipped today — automatically archived at end of day</div>
+      </div>
+      <div id="shipped-today-container"></div>
+    </div>
+
+    <div id="tab-unplanned" class="panel-hidden">
+      <div class="section-header" style="margin-bottom:20px;">
+        <div class="section-title">Unplanned DOs</div>
+        <div style="display:flex;gap:8px;">
+          <button class="btn-icon" onclick="exportToExcel()" style="border-color:var(--green);color:var(--green);">⬇ Export Excel</button>
+          <button class="btn-add" onclick="openModal()">+ Add DO</button>
+        </div>
+      </div>
+      <div id="unplanned-container"></div>
+    </div>
+
+    <div id="tab-pending" class="panel-hidden">
+      <div class="section-header" style="margin-bottom:20px;">
+        <div class="section-title" id="lbl-open-issues">Open Issues</div>
+        <button class="btn-add" onclick="openModal(null,true)" id="btn-add-issue">+ Add Issue</button>
+      </div>
+      <div id="pending-alerts"></div>
+      <table class="do-table">
+        <thead><tr id="pending-thead"></tr></thead>
+        <tbody id="pending-tbody"></tbody>
+      </table>
+    </div>
+
+    <div id="tab-history" class="panel-hidden">
+      <div class="section-header" style="margin-bottom:20px;">
+        <div class="section-title" id="lbl-audit">Audit Log</div>
+        <div style="font-family:var(--mono);font-size:10px;color:var(--muted);" id="lbl-audit-sub">Every change tracked automatically</div>
+      </div>
+      <div id="audit-list"></div>
+    </div>
+
+    <div id="tab-archive" class="panel-hidden">
+      <div class="section-header" style="margin-bottom:20px;">
+        <div class="section-title" id="lbl-archive">Archive</div>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+          <select class="form-select" id="archive-week-filter" onchange="renderArchive()" style="width:200px;padding:6px 10px;font-size:12px;"></select>
+          <button class="btn-icon danger" onclick="clearArchive()" id="btn-clear-week">Clear Week</button>
+          <button class="btn-clear-db" onclick="clearAllData()" id="btn-reset-db">⚠ Reset Database</button>
+        </div>
+      </div>
+      <div id="archive-container"></div>
+    </div>
+  </div>
+</div>
+
+<!-- MODALS -->
+<div class="modal-overlay" id="modal">
+  <div class="modal">
+    <div class="modal-title" id="modal-title">Add DO</div>
+    <input type="hidden" id="edit-id">
+    <div class="form-row">
+      <div class="form-group"><label class="form-label" id="lbl-do-number">DO Number *</label><input class="form-input" id="f-do"></div>
+      <div class="form-group"><label class="form-label" id="lbl-loading-date">Loading Date</label><input class="form-input" id="f-date" type="date"></div>
+      <div class="form-group"><label class="form-label" id="lbl-client">Client *</label><input class="form-input" id="f-client"></div>
+      <div class="form-group"><label class="form-label" id="lbl-destination">Destination</label><input class="form-input" id="f-dest"></div>
+      <div class="form-group full"><label class="form-label" id="lbl-product">Product</label><input class="form-input" id="f-product"></div>
+      <div class="form-group">
+        <label class="form-label" id="lbl-status">Status *</label>
+        <select class="form-select" id="f-status"></select>
+      </div>
+      <div class="form-group">
+        <label class="form-label" id="lbl-category">Category</label>
+        <select class="form-select" id="f-category"></select>
+      </div>
+      <div class="form-group full">
+        <label class="form-label" id="lbl-assignees">Assignees</label>
+        <div class="tag-input-container" id="assignee-container" onclick="document.getElementById('assignee-input').focus()">
+          <input class="tag-input" id="assignee-input">
+        </div>
+      </div>
+      <div class="form-group full"><label class="form-label" id="lbl-blocker">Blocker / Issue</label><input class="form-input" id="f-blocker"></div>
+      <div class="form-group full"><label class="form-label" id="lbl-notes">Notes</label><textarea class="form-textarea" id="f-notes"></textarea></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeModal()" id="btn-cancel-modal">Cancel</button>
+      <button class="btn-save" onclick="saveDO()" id="btn-save-modal">SAVE</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="status-modal">
+  <div class="modal" style="width:420px;">
+    <div class="modal-title" id="su-title">Update Status</div>
+    <input type="hidden" id="su-id">
+    <div class="form-group"><label class="form-label" id="su-lbl-status">New Status</label><select class="form-select" id="su-status"></select></div>
+    <div class="form-group"><label class="form-label" id="su-lbl-note">Note</label><textarea class="form-textarea" id="su-note"></textarea></div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeStatusModal()">Cancel</button>
+      <button class="btn-save" onclick="saveStatus()" id="btn-update-status">UPDATE</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="shipment-status-modal">
+  <div class="modal" style="width:560px;border-top-color:var(--accent2);max-height:92vh;overflow-y:auto;">
+    <div class="modal-title" id="ssm-title">Shipment Actions</div>
+    <input type="hidden" id="ssm-sid">
+    <div id="ssm-do-list" style="margin-bottom:16px;"></div>
+    <div style="border-top:2px solid var(--border);padding-top:16px;margin-top:4px;">
+      <div class="form-label" style="margin-bottom:10px;">APPLY STATUS TO SELECTED DOs</div>
+      <div class="form-group"><select class="form-select" id="ssm-status"></select></div>
+      <div class="form-group"><textarea class="form-textarea" id="ssm-note" style="min-height:55px;" placeholder="Note (optional)"></textarea></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeShipmentStatusModal()">Cancel</button>
+      <button class="btn-save orange" onclick="saveShipmentStatus()">UPDATE SELECTED</button>
+    </div>
+  </div>
+</div>
+
+<!-- INLINE EDIT MODAL (inside shipment modal flow) -->
+<div class="modal-overlay" id="inline-edit-modal">
+  <div class="modal" style="width:540px;">
+    <div class="modal-title" id="iem-title">Edit DO</div>
+    <input type="hidden" id="iem-id">
+    <input type="hidden" id="iem-return-sid">
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">DO Number</label><input class="form-input" id="iem-do" readonly style="opacity:0.6;"></div>
+      <div class="form-group"><label class="form-label">Loading Date</label><input class="form-input" id="iem-date" type="date"></div>
+      <div class="form-group"><label class="form-label">Client</label><input class="form-input" id="iem-client"></div>
+      <div class="form-group"><label class="form-label">Destination</label><input class="form-input" id="iem-dest"></div>
+      <div class="form-group full"><label class="form-label">Product</label><input class="form-input" id="iem-product"></div>
+      <div class="form-group"><label class="form-label">Status</label><select class="form-select" id="iem-status"></select></div>
+      <div class="form-group"><label class="form-label">Move to Shipment <span style="font-weight:400;color:var(--muted)">(leave empty = Unplanned)</span></label><input class="form-input" id="iem-shipment" placeholder="Shipment number or empty"></div>
+      <div class="form-group full"><label class="form-label">Assignees</label>
+        <div class="tag-input-container" id="iem-assignee-container" onclick="document.getElementById('iem-assignee-input').focus()">
+          <input class="tag-input" id="iem-assignee-input">
+        </div>
+      </div>
+      <div class="form-group full"><label class="form-label">Blocker / Issue</label><input class="form-input" id="iem-blocker"></div>
+      <div class="form-group full"><label class="form-label">Notes</label><textarea class="form-textarea" id="iem-notes"></textarea></div>
+    </div>
+    <div class="modal-actions" style="justify-content:space-between;">
+      <button class="btn-cancel" style="border-color:var(--red);color:var(--red);" onclick="inlineDeleteDO()">✕ Delete DO</button>
+      <div style="display:flex;gap:8px;">
+        <button class="btn-cancel" onclick="closeInlineEdit()">Cancel</button>
+        <button class="btn-save" onclick="saveInlineEdit()">SAVE</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="date-modal">
+  <div class="modal" style="width:440px;border-top-color:var(--accent2);">
+    <div class="modal-title" id="dm-title">Reschedule Load</div>
+    <input type="hidden" id="dm-id">
+    <div class="date-change-info" id="dm-info"></div>
+    <div class="form-group"><label class="form-label" id="dm-lbl-date">New Loading Date *</label><input class="form-input" id="dm-date" type="date"></div>
+    <div class="form-group"><label class="form-label" id="dm-lbl-reason">Reason (optional)</label><input class="form-input" id="dm-reason"></div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeDateModal()">Cancel</button>
+      <button class="btn-save orange" onclick="saveDateChange()" id="btn-reschedule">RESCHEDULE</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="move-modal">
+  <div class="modal" style="width:420px;border-top-color:var(--purple);">
+    <div class="modal-title" id="mv-title">Move DO</div>
+    <input type="hidden" id="mv-id">
+    <div class="move-info" id="mv-do-info"></div>
+    <div class="form-group"><label class="form-label" id="mv-lbl-shipment">New Shipment Number</label><input class="form-input" id="mv-shipment"></div>
+    <div style="font-size:11px;color:var(--muted);margin-bottom:14px;" id="mv-user-info"></div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeMoveModal()">Cancel</button>
+      <button class="btn-save purple" onclick="saveMoveShipment()" id="btn-move-do">MOVE DO</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="export-modal">
+  <div class="modal" style="width:420px;">
+    <div class="modal-title">Export to Excel</div>
+    <div class="form-group">
+      <label class="form-label">Report Type</label>
+      <select class="form-select" id="export-type">
+        <option value="all">All Active DOs</option>
+        <option value="unplanned">Unplanned (no carrier)</option>
+        <option value="Shipped">Shipped Today</option>
+        <option value="Pending">Pending</option>
+        <option value="Blocked">Blocked</option>
+        <option value="Late">Late</option>
+        <option value="No Show">No Show</option>
+        <option value="Vehicle Rejected">Vehicle Rejected</option>
+        <option value="Loading">Loading</option>
+        <option value="New">New</option>
+        <option value="issues">All Issues (Blocked + Late + No Show + Vehicle Rejected)</option>
+        <option value="archive">Archive (current week)</option>
+      </select>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="document.getElementById('export-modal').classList.remove('open')">Cancel</button>
+      <button class="btn-save" style="background:var(--green);" onclick="runExport()">⬇ Download</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="stat-modal">
+  <div class="modal stat-modal-wide">
+    <div class="modal-title" id="stat-modal-title"></div>
+    <div id="stat-modal-body" style="overflow-x:auto;"></div>
+    <div class="modal-actions"><button class="btn-save" onclick="document.getElementById('stat-modal').classList.remove('open')" id="btn-close-stat">CLOSE</button></div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="import-modal">
+  <div class="modal" style="width:480px;">
+    <div class="modal-title" id="import-modal-title">Import Complete</div>
+    <div id="import-modal-body"></div>
+    <div class="modal-actions"><button class="btn-save" onclick="document.getElementById('import-modal').classList.remove('open')" id="btn-got-it">GOT IT</button></div>
+  </div>
+</div>
+
+<script>
+// ─── I18N ─────────────────────────────────────────────────────────────────────
+const T = {
+  en: {
+    dashboard:'Dashboard', shippedToday:'Shipped Today', openIssues:'Open Issues', auditLog:'Audit Log', archive:'Archive',
+    loadsDate:'Loads by Date', import:'Import:', noFile:'No file loaded',
+    totalLoads:'Total Loads', shipped:'Shipped', issues:'Blocked / Issues', rescheduled:'Rescheduled', openIssuesStat:'Open Issues',
+    new:'New', pending:'Pending', loading:'Loading', shippedSt:'Shipped', onTime:'On Time', late:'Late',
+    blocked:'Blocked', noShow:'No Show', rejected:'Vehicle Rejected',
+    regularLoad:'Regular Load', openIssue:'Open Issue / Pending', recovery:'Recovery',
+    addDO:'Add DO', editDO:'Edit DO', addIssue:'Add Issue',
+    doNumber:'DO Number *', loadingDate:'Loading Date', client:'Client *', destination:'Destination',
+    product:'Product', status:'Status *', category:'Category', assignees:'Assignees (Enter to add)',
+    blocker:'Blocker / Issue', notes:'Notes', cancel:'Cancel', save:'SAVE',
+    updateStatus:'Update Status', newStatus:'New Status', note:'Update Note', update:'UPDATE',
+    reschedule:'Reschedule Load', newDate:'New Loading Date *', reason:'Reason (optional)', rescheduleBtn:'RESCHEDULE',
+    moveDO:'Move DO', newShipment:'New Shipment Number', moveBtn:'MOVE DO',
+    expandAll:'Expand All', collapseAll:'Collapse All',
+    markShipped:'✓ Mark All Shipped', today:'TODAY', noDateAssigned:'No Date Assigned',
+    notPlanned:'Not planned', accepted:'✓ Accepted', pendingCarrier:'⏳ Pending',
+    enRoute:'🚛 En route', track:'Track →',
+    history:'History', viewHistory:'View history',
+    auditTracked:'Every change tracked automatically',
+    clearWeek:'Clear Week', resetDb:'⚠ Reset Database',
+    allWeeks:'All weeks', noArchive:'No archived shipments yet.',
+    signOut:'Sign Out', selectFactory:'Select Factory', yourName:'Your name',
+    rescheduledAlert:'Reschedule Alerts', carrierAction:'New load date. Please reschedule with the carrier.',
+    appt:'Appt:', dosSuffix:'DOs', shipmentsSuffix:'shipments',
+    allShipped:'All Shipped', hasIssues:'Has Issues', unplanned:'Unplanned',
+    noCarrier:'Load shipments file to see carrier',
+    confirmShipAll:'Mark all DOs in shipment as Shipped?',
+    confirmBulkStatus:'Mark selected DOs as', confirmBulkDel:'Delete selected DOs?',
+    confirmClearWeek:'Clear this week from archive?', confirmResetAll:'RESET ALL DATA? This cannot be undone.',
+    moved:'Moved by', loggedIn:'on', dismiss:'×',
+  },
+  es: {
+    dashboard:'Dashboard', shippedToday:'Shipped Today', openIssues:'Open Issues', auditLog:'Audit Log', archive:'Archive',
+    loadsDate:'Cargas por Fecha', import:'Importar:', noFile:'Sin archivo',
+    totalLoads:'Total Cargas', shipped:'Shipped', issues:'Blocked / Issues', rescheduled:'Rescheduled', openIssuesStat:'Open Issues',
+    new:'New', pending:'Pending', loading:'Loading', shippedSt:'Shipped', onTime:'A Tiempo', late:'Late',
+    blocked:'Blocked', noShow:'No se presentó', rejected:'Vehicle Rejected',
+    regularLoad:'Carga Regular', openIssue:'Problema Abierto', recovery:'Recuperación',
+    addDO:'Agregar DO', editDO:'Editar DO', addIssue:'Agregar Problema',
+    doNumber:'Número DO *', loadingDate:'Fecha de Carga', client:'Cliente *', destination:'Destino',
+    product:'Producto', status:'Estado *', category:'Categoría', assignees:'Responsables (Enter para agregar)',
+    blocker:'Bloqueo / Problema', notes:'Notas', cancel:'Cancelar', save:'GUARDAR',
+    updateStatus:'Actualizar Estado', newStatus:'Nuevo Estado', note:'Nota', update:'UPDATE',
+    reschedule:'Reprogramar Carga', newDate:'Nueva Fecha de Carga *', reason:'Motivo (opcional)', rescheduleBtn:'RESCHEDULE',
+    moveDO:'Mover DO', newShipment:'Nuevo Número de Embarque', moveBtn:'MOVE DO',
+    expandAll:'Expandir Todo', collapseAll:'Colapsar Todo',
+    markShipped:'✓ Mark All Shipped', today:'HOY', noDateAssigned:'Sin Fecha Asignada',
+    notPlanned:'Sin planificar', accepted:'✓ Aceptado', pendingCarrier:'⏳ Pendiente',
+    enRoute:'🚛 En ruta', track:'Rastrear →',
+    history:'Historial', viewHistory:'Ver historial',
+    auditTracked:'Cada cambio registrado automáticamente',
+    clearWeek:'Borrar Semana', resetDb:'⚠ Reiniciar Base',
+    allWeeks:'Todas las semanas', noArchive:'Sin envíos archivados.',
+    signOut:'Salir', selectFactory:'Seleccionar Fábrica', yourName:'Tu nombre',
+    rescheduledAlert:'Alertas de Reprogramación', carrierAction:'Nueva fecha de carga. Por favor reprogramar con el transportista.',
+    appt:'Cita:', dosSuffix:'DOs', shipmentsSuffix:'embarques',
+    allShipped:'All Shipped', hasIssues:'Has Issues', unplanned:'Sin planificar',
+    noCarrier:'Cargar archivo de embarques para ver transportista',
+    confirmShipAll:'¿Marcar todos los DOs del embarque como Enviado?',
+    confirmBulkStatus:'Marcar DOs seleccionados como', confirmBulkDel:'¿Eliminar DOs seleccionados?',
+    confirmClearWeek:'¿Borrar esta semana del archivo?', confirmResetAll:'¿REINICIAR TODOS LOS DATOS? No se puede deshacer.',
+    moved:'Movido por', loggedIn:'el', dismiss:'×',
+  },
+  pt: {
+    dashboard:'Dashboard', shippedToday:'Shipped Today', openIssues:'Open Issues', auditLog:'Audit Log', archive:'Archive',
+    loadsDate:'Cargas por Data', import:'Importar:', noFile:'Sem arquivo',
+    totalLoads:'Total de Cargas', shipped:'Shipped', issues:'Blocked / Issues', rescheduled:'Rescheduled', openIssuesStat:'Open Issues',
+    new:'New', pending:'Pending', loading:'Loading', shippedSt:'Shipped', onTime:'No Prazo', late:'Late',
+    blocked:'Blocked', noShow:'No Show', rejected:'Vehicle Rejected',
+    regularLoad:'Carga Regular', openIssue:'Problema Aberto', recovery:'Recuperação',
+    addDO:'Adicionar DO', editDO:'Editar DO', addIssue:'Adicionar Problema',
+    doNumber:'Número DO *', loadingDate:'Data de Carregamento', client:'Cliente *', destination:'Destino',
+    product:'Produto', status:'Status *', category:'Categoria', assignees:'Responsáveis (Enter para adicionar)',
+    blocker:'Bloqueio / Problema', notes:'Notas', cancel:'Cancelar', save:'SALVAR',
+    updateStatus:'Atualizar Status', newStatus:'Novo Status', note:'Nota', update:'UPDATE',
+    reschedule:'Reprogramar Carga', newDate:'Nova Data de Carregamento *', reason:'Motivo (opcional)', rescheduleBtn:'RESCHEDULE',
+    moveDO:'Mover DO', newShipment:'Novo Número de Embarque', moveBtn:'MOVE DO',
+    expandAll:'Expandir Tudo', collapseAll:'Recolher Tudo',
+    markShipped:'✓ Mark All Shipped', today:'HOJE', noDateAssigned:'Sem Data Atribuída',
+    notPlanned:'Sem planejamento', accepted:'✓ Aceito', pendingCarrier:'⏳ Pendente',
+    enRoute:'🚛 Em rota', track:'Rastrear →',
+    history:'Histórico', viewHistory:'Ver histórico',
+    auditTracked:'Cada alteração registrada automaticamente',
+    clearWeek:'Limpar Semana', resetDb:'⚠ Resetar Banco',
+    allWeeks:'Todas as semanas', noArchive:'Sem embarques arquivados.',
+    signOut:'Sair', selectFactory:'Selecionar Fábrica', yourName:'Seu nome',
+    rescheduledAlert:'Alertas de Reprogramação', carrierAction:'Nova data de carregamento. Por favor reprogramar com a transportadora.',
+    appt:'Agend.:', dosSuffix:'DOs', shipmentsSuffix:'embarques',
+    allShipped:'All Shipped', hasIssues:'Has Issues', unplanned:'Sem planejamento',
+    noCarrier:'Carregar arquivo de embarques para ver transportadora',
+    confirmShipAll:'Marcar todos os DOs do embarque como Embarcado?',
+    confirmBulkStatus:'Marcar DOs selecionados como', confirmBulkDel:'Excluir DOs selecionados?',
+    confirmClearWeek:'Limpar esta semana do arquivo?', confirmResetAll:'RESETAR TODOS OS DADOS? Não pode ser desfeito.',
+    moved:'Movido por', loggedIn:'em', dismiss:'×',
+  }
+};
+
+const FACTORIES = {
+  en: [{id:'denton',name:'Denton',country:'TX, USA'},{id:'sikeston',name:'Sikeston',country:'MO, USA'},{id:'vancouver',name:'Vancouver',country:'WA, USA'},{id:'louisa',name:'Louisa',country:'VA, USA'}],
+  es: [{id:'queretaro',name:'Querétaro',country:'México'},{id:'larioja',name:'La Rioja',country:'Argentina'}],
+  pt: [{id:'pontagrossa',name:'Ponta Grossa',country:'PR, Brasil'},{id:'montemor',name:'Monte Mor',country:'SP, Brasil'}],
+};
+
+const STATUSES = (lang) => [
+  {val:'New',label:'New'},{val:'Pending',label:'Pending'},
+  {val:'Loading',label:'Loading'},{val:'Shipped',label:'Shipped'},
+  {val:'On Time',label:'On Time'},{val:'Late',label:'Late'},
+  {val:'Blocked',label:'Blocked'},{val:'No Show',label:'No Show'},
+  {val:'Vehicle Rejected',label:'Vehicle Rejected'},
+];
+
+const CATEGORIES = (lang) => [
+  {val:'Today',label:T[lang].regularLoad},{val:'Pending',label:T[lang].openIssue},{val:'Recovery',label:T[lang].recovery}
+];
+
+// ─── STATE ─────────────────────────────────────────────────────────────────────
+let currentUser=null, currentLang='en', currentFactory=null;
+let shipmentsMap={}, collapsedDays={}, assigneeTags=[], selectedDOs=new Set();
+let sortByTime=false;
+
+function getShipmentsKey(){ return 'dms_shipments_'+(currentFactory||'default'); }
+function loadShipmentsMap(){
+  try{
+    const saved=localStorage.getItem(getShipmentsKey());
+    if(saved) shipmentsMap=JSON.parse(saved);
+  }catch(e){ shipmentsMap={}; }
+}
+function saveShipmentsMap(){
+  try{ localStorage.setItem(getShipmentsKey(), JSON.stringify(shipmentsMap)); }catch(e){}
+}
+
+function getStorageKey(){ return 'dms_state_'+(currentFactory||'default'); }
+function getState(){ return JSON.parse(localStorage.getItem(getStorageKey())||'{"dos":[],"audit":[],"reschedules":[],"archive":[]}'); }
+function saveState(s){ localStorage.setItem(getStorageKey(), JSON.stringify(s)); }
+function t(key){ return T[currentLang][key]||key; }
+
+// ─── SETUP ─────────────────────────────────────────────────────────────────────
+let selectedLang=null, selectedFactory=null;
+
+// All factories flat list with their default lang
+const ALL_FACTORIES = [
+  {id:'denton',     name:'Denton',        country:'TX, USA',    defaultLang:'en',
+   capacity:{1:30,2:30,3:30,4:30,5:30,6:15,0:30}},
+  {id:'sikeston',   name:'Sikeston',      country:'MO, USA',    defaultLang:'en',
+   capacity:{1:18,2:18,3:18,4:18,5:18,6:18,0:18}},
+  {id:'vancouver',  name:'Vancouver',     country:'WA, USA',    defaultLang:'en',
+   capacity:{1:15,2:15,3:15,4:15,5:15,6:15,0:15}},
+  {id:'louisa',     name:'Louisa',        country:'VA, USA',    defaultLang:'en',
+   capacity:{1:4,2:4,3:4,4:4,5:4,6:4,0:4}},
+  {id:'mexicali',   name:'Mexicali',      country:'México',     defaultLang:'es',
+   capacity:{1:15,2:15,3:15,4:15,5:15,6:15,0:15}},
+  {id:'queretaro',  name:'Querétaro',     country:'México',     defaultLang:'es',
+   capacity:{1:43,2:43,3:43,4:43,5:43,6:43,0:43}},
+  {id:'larioja',    name:'La Rioja',      country:'Argentina',  defaultLang:'es',
+   capacity:{1:16,2:16,3:16,4:16,5:16,6:16,0:16}},
+  {id:'pontagrossa',name:'Ponta Grossa',  country:'PR, Brasil', defaultLang:'pt',
+   capacity:{1:35,2:35,3:35,4:35,5:35,6:35,0:35}},
+  {id:'montemor',   name:'Monte Mor',     country:'SP, Brasil', defaultLang:'pt',
+   capacity:{1:40,2:45,3:45,4:45,5:45,6:25,0:40}},
+];
+
+function getTodayCapacity(){
+  const sess=JSON.parse(localStorage.getItem('dms_session')||'{}');
+  const factory=ALL_FACTORIES.find(f=>f.id===sess.factory);
+  if(!factory||!factory.capacity) return 30;
+  const dow=new Date().getDay();
+  return factory.capacity[dow]||0;
+}
+
+function initFactoryGrid(){
+  const grid=document.getElementById('factory-grid');
+  if(!grid){ console.error('factory-grid not found'); return; }
+  grid.innerHTML='';
+  ALL_FACTORIES.forEach(f=>{
+    const btn=document.createElement('button');
+    btn.className='select-btn';
+    btn.innerHTML=f.name+'<div class="factory-flag">'+f.country+'</div>';
+    btn.onclick=()=>selectFactory(f,btn);
+    grid.appendChild(btn);
+  });
+}
+
+function selectFactoryById(btn){
+  var fid=btn.dataset.fid;
+  var factory=ALL_FACTORIES.find(function(f){return f.id===fid;});
+  if(!factory){console.error('Factory not found:',fid);return;}
+  selectFactory(factory,btn);
+}
+
+function selectFactory(factory, btn){
+  selectedFactory=factory;
+  // Deselect all factory buttons
+  document.querySelectorAll('#factory-grid button').forEach(function(b){b.classList.remove('selected');});
+  btn.classList.add('selected');
+  // Auto-select default language
+  selectedLang=factory.defaultLang;
+  document.querySelectorAll('.lang-grid .select-btn').forEach(function(b){b.classList.remove('selected');});
+  var langBtn=document.getElementById('lang-'+factory.defaultLang);
+  if(langBtn) langBtn.classList.add('selected');
+  // Update name label
+  document.getElementById('lbl-name').textContent=factory.defaultLang==='es'?'Tu nombre':factory.defaultLang==='pt'?'Seu nome':'Your name';
+  document.getElementById('btn-enter').disabled=false;
+  document.getElementById('setup-name').focus();
+}
+
+function selectLang(lang, btn){
+  selectedLang=lang;
+  document.querySelectorAll('.lang-grid .select-btn').forEach(function(b){b.classList.remove('selected');});
+  btn.classList.add('selected');
+  document.getElementById('lbl-name').textContent=lang==='es'?'Tu nombre':lang==='pt'?'Seu nome':'Your name';
+}
+
+function enterSystem(){
+  const name=document.getElementById('setup-name').value.trim();
+  if(!name){ alert('Please enter your name.'); return; }
+  if(!selectedFactory){ alert('Please select a factory.'); return; }
+  if(!selectedLang){ selectedLang=selectedFactory.defaultLang; }
+  currentUser=name;
+  currentLang=selectedLang;
+  currentFactory=selectedFactory.id;
+  localStorage.setItem('dms_session', JSON.stringify({
+    user:name, lang:selectedLang, factory:selectedFactory.id, factoryName:selectedFactory.name
+  }));
+  document.getElementById('setup-screen').style.display='none';
+  document.getElementById('app').style.display='block';
+  initApp();
+}
+
+function logout(){
+  localStorage.removeItem('dms_session');
+  currentUser=null; currentFactory=null;
+  shipmentsMap={}; collapsedDays={};
+  // Note: shipmentsMap persists per factory in localStorage
+  document.getElementById('app').style.display='none';
+  document.getElementById('setup-screen').style.display='flex';
+  document.getElementById('setup-name').value='';
+  document.querySelectorAll('.select-btn').forEach(b=>b.classList.remove('selected'));
+  document.getElementById('lang-section').style.display='none';
+  document.getElementById('name-section').style.display='none';
+  initFactoryGrid();
+  document.getElementById('btn-enter').disabled=true;
+  selectedLang=null; selectedFactory=null;
+}
+
+document.addEventListener('DOMContentLoaded',function(){
+  const sess=localStorage.getItem('dms_session');
+  if(sess){
+    const s=JSON.parse(sess);
+    currentUser=s.user; currentLang=s.lang; currentFactory=s.factory;
+    document.getElementById('setup-screen').style.display='none';
+    document.getElementById('app').style.display='block';
+    initApp();
+  }
+  initFactoryGrid();
+  document.getElementById('setup-name').addEventListener('keydown',e=>{if(e.key==='Enter')enterSystem();});
+  document.getElementById('assignee-input').addEventListener('keydown',e=>{
+    if(e.key==='Enter'||e.key===','){e.preventDefault();const v=e.target.value.trim();if(v){addAssigneeTag(v);e.target.value='';}}
+  });
+});
+
+function initApp(){
+  const sess=JSON.parse(localStorage.getItem('dms_session')||'{}');
+  const sess2=JSON.parse(localStorage.getItem('dms_session')||'{}');
+  const factory=ALL_FACTORIES.find(f=>f.id===currentFactory)||{name:sess2.factoryName||currentFactory,country:''};
+  document.getElementById('header-user').textContent=currentUser;
+  document.getElementById('factory-badge').textContent=(factory.name||currentFactory).toUpperCase();
+  document.getElementById('header-date').textContent=new Date().toLocaleDateString(
+    currentLang==='pt'?'pt-BR':currentLang==='es'?'es-ES':'en-US',
+    {weekday:'long',year:'numeric',month:'long',day:'numeric'}
+  );
+  document.getElementById('btn-logout').textContent=t('signOut');
+  loadShipmentsMap();
+  buildNav();
+  applyI18N();
+  populateSelects();
+  renderAll();
+}
+
+function buildNav(){
+  const tabs=[
+    {id:'dashboard',label:t('dashboard')},
+    {id:'shipped-today',label:t('shippedToday')},
+    {id:'unplanned',label:'Unplanned'},
+    {id:'pending',label:t('openIssues')},
+    {id:'history',label:t('auditLog')},
+    {id:'archive',label:t('archive')},
+  ];
+  document.getElementById('main-nav').innerHTML=tabs.map((tab,i)=>
+    `<div class="nav-tab ${i===0?'active':''}" onclick="switchTab('${tab.id}')">${tab.label}</div>`
+  ).join('');
+}
+
+function applyI18N(){
+  document.getElementById('lbl-import').textContent=t('import');
+  document.getElementById('dpl-status').textContent=t('noFile');
+  document.getElementById('ship-status').textContent=t('noFile');
+  document.getElementById('lbl-loads-by-date').textContent=t('loadsDate');
+  document.getElementById('btn-expand').title=t('expandAll');
+  document.getElementById('btn-collapse').title=t('collapseAll');
+  document.getElementById('btn-add-do').textContent='+ '+t('addDO');
+  document.getElementById('lbl-open-issues').textContent=t('openIssues');
+  document.getElementById('btn-add-issue').textContent='+ '+t('addIssue');
+  document.getElementById('lbl-audit').textContent=t('auditLog');
+  document.getElementById('lbl-audit-sub').textContent=t('auditTracked');
+  document.getElementById('lbl-archive').textContent=t('archive');
+  document.getElementById('btn-clear-week').textContent=t('clearWeek');
+  document.getElementById('btn-reset-db').textContent=t('resetDb');
+  document.getElementById('lbl-do-number').textContent=t('doNumber');
+  document.getElementById('lbl-loading-date').textContent=t('loadingDate');
+  document.getElementById('lbl-client').textContent=t('client');
+  document.getElementById('lbl-destination').textContent=t('destination');
+  document.getElementById('lbl-product').textContent=t('product');
+  document.getElementById('lbl-status').textContent=t('status');
+  document.getElementById('lbl-category').textContent=t('category');
+  document.getElementById('lbl-assignees').textContent=t('assignees');
+  document.getElementById('lbl-blocker').textContent=t('blocker');
+  document.getElementById('lbl-notes').textContent=t('notes');
+  document.getElementById('btn-cancel-modal').textContent=t('cancel');
+  document.getElementById('btn-save-modal').textContent=t('save');
+  document.getElementById('su-title').textContent=t('updateStatus');
+  document.getElementById('su-lbl-status').textContent=t('newStatus');
+  document.getElementById('su-lbl-note').textContent=t('note');
+  document.getElementById('btn-update-status').textContent=t('update');
+  document.getElementById('dm-title').textContent=t('reschedule');
+  document.getElementById('dm-lbl-date').textContent=t('newDate');
+  document.getElementById('dm-lbl-reason').textContent=t('reason');
+  document.getElementById('btn-reschedule').textContent=t('rescheduleBtn');
+  document.getElementById('mv-title').textContent=t('moveDO');
+  document.getElementById('mv-lbl-shipment').textContent=t('newShipment')+' (leave empty = Unplanned)';
+  document.getElementById('btn-move-do').textContent=t('moveBtn');
+  document.getElementById('btn-bulk-ship').textContent='✓ '+t('shippedSt');
+  document.getElementById('btn-bulk-del').textContent='✕ Delete';
+  document.getElementById('btn-bulk-cancel').textContent=t('cancel');
+  document.getElementById('btn-got-it').textContent='GOT IT';
+  document.getElementById('btn-close-stat').textContent=t('cancel');
+  // Pending table header
+  document.getElementById('pending-thead').innerHTML=
+    ['DO #',t('client')+' / '+t('destination'),t('loadingDate'),t('status'),t('blocker'),t('assignees'),t('notes')+' / '+t('history'),'Actions']
+    .map(h=>`<th>${h}</th>`).join('');
+}
+
+function populateSelects(){
+  const statuses=STATUSES(currentLang);
+  ['f-status','su-status'].forEach(id=>{
+    document.getElementById(id).innerHTML=statuses.map(s=>`<option value="${s.val}">${s.label}</option>`).join('');
+  });
+  document.getElementById('f-category').innerHTML=CATEGORIES(currentLang).map(c=>`<option value="${c.val}">${c.label}</option>`).join('');
+  document.getElementById('assignee-input').placeholder=currentLang==='pt'?'Nome e pressione Enter...':currentLang==='es'?'Nombre y presione Enter...':'Type name and press Enter...';
+}
+
+// ─── TABS ─────────────────────────────────────────────────────────────────────
+function switchTab(tab){
+  ['dashboard','shipped-today','unplanned','pending','history','archive'].forEach(t=>document.getElementById('tab-'+t).classList.toggle('panel-hidden',t!==tab));
+  document.querySelectorAll('.nav-tab').forEach((el,i)=>el.classList.toggle('active',['dashboard','shipped-today','unplanned','pending','history','archive'][i]===tab));
+  if(tab==='history')renderAudit();
+  if(tab==='pending')renderPending();
+  if(tab==='archive')renderArchive();
+  if(tab==='shipped-today')renderShippedToday();
+  if(tab==='unplanned')renderUnplanned();
+}
+
+// ─── IMPORT DPL ────────────────────────────────────────────────────────────────
+function handleDPLUpload(event){
+  const file=event.target.files[0]; if(!file)return;
+  const reader=new FileReader();
+  reader.onload=function(e){
+    try{
+      const wb=XLSX.read(e.target.result,{type:'array',cellDates:true});
+      const ws=wb.Sheets[wb.SheetNames[0]];
+      const rows=XLSX.utils.sheet_to_json(ws,{defval:''});
+      const doMap={};
+      const fmtD=d=>d instanceof Date?d.toISOString().split('T')[0]:(typeof d==='string'&&d.length>=10?d.substring(0,10):'');
+      rows.forEach(row=>{
+        const doNum=(row['Delivery Order/Sales order']||'').toString().trim();
+        if(!doNum||doNum==='Delivery Order/Sales order')return;
+        if(!doMap[doNum]){
+          doMap[doNum]={
+            doNumber:doNum,
+            status:mapDPLStatus(row['Status']||''),
+            sapStatus:(row['Status']||'').toString().trim(),
+            shipmentId:(row['Shipment No']||'').toString().trim(),
+            loadingDate:'',
+            deliveryDate:fmtD(row['Delivery Date']),
+            client:(row['Ship-to']||'').toString().trim(),
+            destination:(row['City']||'').toString().trim(),
+            pallets:(row['Header Calculated Pallets']||'').toString().trim(),
+            products:[],
+            iDelivery:(row['I-Delivery information - Header Text']||'').toString().trim(),
+            eDelivery:(row['E-Delivery information - Header Text']||'').toString().trim(),
+          };
+        }
+        if(!doMap[doNum].loadingDate){
+          const ld=row['Loading Date']||row['Planned Loading Date'];
+          if(ld) doMap[doNum].loadingDate=fmtD(ld);
+        }
+        if(!doMap[doNum].shipmentId){
+          const sn=(row['Shipment No']||'').toString().trim();
+          if(sn) doMap[doNum].shipmentId=sn;
+        }
+        const desc=(row['Description']||'').toString().trim();
+        if(desc&&!doMap[doNum].products.includes(desc)) doMap[doNum].products.push(desc);
+      });
+      Object.values(doMap).forEach(d=>{
+        d.product=d.products.slice(0,2).join(' / ')+(d.products.length>2?' +'+d.products.length:'');
+        delete d.products;
+      });
+
+      const state=getState();
+      // Auto-archive shipped DOs from previous days
+      const todayStr=new Date().toISOString().split('T')[0];
+      state.archive=state.archive||[];
+      const toArchive=state.dos.filter(d=>d.status==='Shipped'&&d.loadingDate&&d.loadingDate<todayStr);
+      if(toArchive.length){
+        const wk=getWeekKey(new Date());
+        if(!state.archive.find(a=>a.weekKey===wk)) state.archive.push({weekKey:wk,label:getWeekLabel(new Date()),dos:[]});
+        const week=state.archive.find(a=>a.weekKey===wk);
+        toArchive.forEach(d=>{if(!week.dos.find(a=>a.doNumber===d.doNumber)) week.dos.push(d);});
+        state.dos=state.dos.filter(d=>!(d.status==='Shipped'&&d.loadingDate&&d.loadingDate<todayStr));
+      }
+
+      let added=0,updated=0,skipped=0;
+      Object.values(doMap).forEach(imported=>{
+        const existing=state.dos.find(x=>x.doNumber===imported.doNumber);
+        if(existing){
+          let changed=false;
+          if(!existing.shipmentId&&imported.shipmentId){existing.shipmentId=imported.shipmentId;changed=true;}
+          if(!existing.product&&imported.product){existing.product=imported.product;changed=true;}
+          if(!existing.loadingDate&&imported.loadingDate){existing.loadingDate=imported.loadingDate;changed=true;}
+          if(!existing.pallets&&imported.pallets){existing.pallets=imported.pallets;changed=true;}
+          if(!existing.destination&&imported.destination){existing.destination=imported.destination;changed=true;}
+          changed?updated++:skipped++;
+        }else{
+          const now=new Date().toISOString();
+          const noteText=imported.eDelivery||imported.iDelivery||'';
+          state.dos.push({
+            ...imported,
+            id:'do_'+Date.now()+'_'+Math.random().toString(36).slice(2,6),
+            category:'Today',assignees:[],notes:noteText,blocker:'',
+            originalLoadingDate:imported.loadingDate,rescheduled:false,
+            history:noteText?[{at:now,by:'DPL Import',note:noteText,type:'note'}]:[],
+            createdAt:now,createdBy:currentUser+' (DPL)',updatedBy:currentUser,updatedAt:now,
+          });
+          added++;
+        }
+      });
+      saveState(state);
+      logAudit('DPL Import',Object.keys(doMap).length+' DOs','Added: '+added+', Updated: '+updated+', Skipped: '+skipped);
+      const total=Object.keys(doMap).length;
+      document.getElementById('dpl-status').textContent='✓ '+total+' DOs';
+      document.getElementById('dpl-status').className='import-status ok';
+      document.getElementById('dpl-btn').classList.add('loaded');
+      document.getElementById('import-modal-title').textContent='DPL Import Complete';
+      document.getElementById('import-modal-body').innerHTML=
+        '<p style="color:var(--muted);font-size:13px;margin-bottom:12px;">'+
+        (currentLang==='pt'?'Dados importados. Notas e responsáveis preservados.':
+         currentLang==='es'?'Datos importados. Notas y responsables preservados.':
+         'Data imported. Manual notes and assignees preserved.')+'</p>'+
+        '<div class="import-result">'+
+        '<div class="import-result-row"><span>Total</span><span>'+total+'</span></div>'+
+        '<div class="import-result-row"><span class="imp-new">'+(currentLang==='pt'?'Adicionados':currentLang==='es'?'Agregados':'Added')+'</span><span class="imp-new">'+added+'</span></div>'+
+        '<div class="import-result-row"><span class="imp-updated">'+(currentLang==='pt'?'Atualizados':currentLang==='es'?'Actualizados':'Updated')+'</span><span class="imp-updated">'+updated+'</span></div>'+
+        '</div>';
+      document.getElementById('import-modal').classList.add('open');
+      crossReference();renderAll();
+    }catch(err){
+      console.error(err);
+      document.getElementById('dpl-status').textContent='Error';
+      document.getElementById('dpl-status').className='import-status warn';
+    }
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+// ─── IMPORT SHIPMENTS ──────────────────────────────────────────────────────────
+function handleShipmentsUpload(event){
+  const file=event.target.files[0]; if(!file)return;
+  const reader=new FileReader();
+  reader.onload=function(e){
+    try{
+      const wb=XLSX.read(e.target.result,{type:'array',cellDates:true});
+      const ws=wb.Sheets[wb.SheetNames[0]];
+      const rows=XLSX.utils.sheet_to_json(ws,{defval:''});
+      let updated=0, added=0;
+      rows.forEach(row=>{
+        const sid=(row['Shipment ID']||'').toString().trim();
+        if(!sid)return;
+        const tenderRaw=(row['Tender Status']||'').toString();
+        const enroute=(row['Enroute Status']||'').toString();
+        const newData={
+          shipmentId:sid,
+          carrier:(row['Carrier Name']||'').toString().trim(),
+          tenderAccepted:tenderRaw.toLowerCase().includes('accepted'),
+          startTime:row['Start Time']||'',
+          endTime:row['End Time']||'',
+          appointmentStart:row['Appointment Start']||'',
+          isEnroute:enroute.toLowerCase().includes('enroute')&&!enroute.toLowerCase().includes('not started'),
+          trackingUrl:(row['ILMCT TRACKING URL']||'').toString().trim(),
+          pallets:(row['No. of Pallets']||'').toString().trim(),
+        };
+        if(shipmentsMap[sid]){
+          // Merge — only update fields that actually changed
+          const existing=shipmentsMap[sid];
+          let changed=false;
+          Object.keys(newData).forEach(k=>{
+            if(newData[k]!==''&&newData[k]!==existing[k]){
+              existing[k]=newData[k];
+              changed=true;
+            }
+          });
+          if(changed) updated++;
+        }else{
+          shipmentsMap[sid]=newData;
+          added++;
+        }
+      });
+      saveShipmentsMap();
+      const total=Object.keys(shipmentsMap).length;
+      document.getElementById('ship-status').textContent='✓ '+total+' (+'+(added)+' new, '+(updated)+' updated)';
+      document.getElementById('ship-status').className='import-status ok';
+      document.getElementById('ship-btn').classList.add('loaded');
+      crossReference();renderAll();
+    }catch(err){
+      document.getElementById('ship-status').textContent='Error';
+      document.getElementById('ship-status').className='import-status warn';
+    }
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+function crossReference(){
+  if(!Object.keys(shipmentsMap).length)return;
+  const state=getState();
+  const linked=state.dos.filter(d=>d.shipmentId&&shipmentsMap[d.shipmentId]).length;
+  if(linked>0){
+    document.getElementById('cross-status').textContent='⚡ '+linked+' linked';
+    document.getElementById('cross-status').className='import-status ok';
+  }
+}
+function getCarrierInfo(d){ if(!d.shipmentId)return null; return shipmentsMap[d.shipmentId]||null; }
+
+function mapDPLStatus(raw){
+  const s=raw.trim();
+  if(s==='Ckd'||s==='Prcd')return 'Pending';
+  return 'New';
+}
+
+// ─── RENDER ALL ────────────────────────────────────────────────────────────────
+function renderAll(){ renderStats();renderAlerts();renderRescheduleStrip();renderDays(); }
+
+function renderStats(){
+  const state=getState();
+  const dos=state.dos;
+  const loads=dos.filter(d=>d.category==='Today'||d.category==='Recovery');
+  // Count shipped including those already moved to shippedToday archive
+  const todayStr=new Date().toISOString().split('T')[0];
+  const shippedTodayEntry=(state.shippedToday||[]).find(x=>x.date===todayStr);
+  const shippedTodayDos=shippedTodayEntry?shippedTodayEntry.dos:[];
+  const shippedInActive=loads.filter(d=>d.status==='Shipped').length;
+  const shipped=shippedInActive+shippedTodayDos.length;
+  const blocked=dos.filter(d=>['Blocked','No Show','Late','Vehicle Rejected'].includes(d.status)).length;
+  const pending=dos.filter(d=>d.category==='Pending').length;
+  const rescheduled=dos.filter(d=>d.rescheduled).length;
+  // Build shipped inline list
+  let shippedInlineHtml='';
+  if(shippedTodayDos.length){
+    shippedInlineHtml='<div class="shipped-inline">';
+    shippedTodayDos.slice(0,5).forEach(d=>{
+      const carrier=getCarrierInfo(d);
+      const appt=carrier&&carrier.appointmentStart?fmtAppt(carrier.appointmentStart):'';
+      shippedInlineHtml+='<div class="shipped-inline-row">'+
+        '<span class="shipped-do">'+d.doNumber+'</span>'+
+        '<span class="shipped-client">'+d.client+'</span>'+
+        (appt?'<span class="shipped-time">'+appt+'</span>':'');
+      shippedInlineHtml+='</div>';
+    });
+    if(shippedTodayDos.length>5) shippedInlineHtml+='<div style="font-size:10px;color:var(--muted);padding-top:4px;">+'+(shippedTodayDos.length-5)+' more</div>';
+    shippedInlineHtml+='</div>';
+  }
+  document.getElementById('stats-row').innerHTML=
+    '<div class="stat-card blue" onclick="openStatModal(\'all\')"><div class="stat-label">'+t('totalLoads')+'</div><div class="stat-value">'+loads.length+'</div><div class="stat-sub">Max: 30</div><div class="stat-hint">↗</div></div>'+
+    '<div class="stat-card green" onclick="openStatModal(\'shipped\')"><div class="stat-label">'+t('shipped')+'</div><div class="stat-value">'+shipped+'</div><div class="stat-sub">'+(loads.length?Math.round(shipped/loads.length*100):0)+'%</div><div class="stat-hint">↗</div></div>'+
+    '<div class="stat-card red" onclick="openStatModal(\'issues\')"><div class="stat-label">'+t('issues')+'</div><div class="stat-value">'+blocked+'</div><div class="stat-sub">'+t('issues')+'</div><div class="stat-hint">↗</div></div>'+
+    '<div class="stat-card orange" onclick="openStatModal(\'rescheduled\')"><div class="stat-label">'+t('rescheduled')+'</div><div class="stat-value">'+rescheduled+'</div><div class="stat-sub">'+t('rescheduled')+'</div><div class="stat-hint">↗</div></div>'+
+    '<div class="stat-card purple" onclick="switchTab(\'pending\')"><div class="stat-label">'+t('openIssuesStat')+'</div><div class="stat-value">'+pending+'</div><div class="stat-sub">'+t('openIssuesStat')+'</div><div class="stat-hint">↗</div></div>';
+}
+
+function openStatModal(type){
+  const state=getState();
+  const loads=state.dos.filter(d=>d.category==='Today'||d.category==='Recovery');
+  let title='',dos=[];
+  if(type==='all'){title=t('totalLoads');dos=loads;}
+  else if(type==='shipped'){title=t('shipped');dos=loads.filter(d=>d.status==='Shipped'||d.status==='On Time');}
+  else if(type==='issues'){title=t('issues');dos=state.dos.filter(d=>['Blocked','No Show','Late','Vehicle Rejected'].includes(d.status));}
+  else if(type==='rescheduled'){title=t('rescheduled');dos=state.dos.filter(d=>d.rescheduled);}
+  const rows=dos.map(d=>{
+    const carrier=getCarrierInfo(d);
+    return '<tr>'+
+      '<td><span class="do-number">'+d.doNumber+'</span>'+sapBadge(d.sapStatus||'')+'</td>'+
+      '<td><div style="font-weight:500;">'+d.client+'</div><div style="color:var(--muted);font-size:11px;">'+d.destination+'</div></td>'+
+      '<td style="font-family:var(--mono);font-size:11px;">'+fmtDay(d.loadingDate)+'</td>'+
+      '<td>'+statusBadge(d.status)+'</td>'+
+      '<td style="font-size:11px;color:var(--accent2);">'+(d.blocker||'—')+'</td>'+
+      '<td>'+(carrier?'<div class="sg-carrier">'+carrier.carrier+'</div>'+'<div class="'+(carrier.tenderAccepted?'carrier-accepted':'carrier-pending-txt')+'">'+t(carrier.tenderAccepted?'accepted':'pendingCarrier')+'</div>':'<span class="not-planned">—</span>')+'</td>'+
+      '</tr>';
+  }).join('');
+  document.getElementById('stat-modal-title').textContent=title+' ('+dos.length+')';
+  document.getElementById('stat-modal-body').innerHTML=dos.length?
+    '<table class="do-table" style="margin:0;"><thead><tr>'+
+    ['DO #',t('client'),t('loadingDate'),t('status'),t('blocker'),'Carrier'].map(h=>'<th>'+h+'</th>').join('')+
+    '</tr></thead><tbody>'+rows+'</tbody></table>':
+    '<div class="empty-state" style="padding:30px;"><div class="empty-state-icon">✅</div></div>';
+  document.getElementById('stat-modal').classList.add('open');
+}
+
+function renderAlerts(){
+  const state=getState();
+  const critical=state.dos.filter(d=>['Blocked','No Show','Vehicle Rejected'].includes(d.status));
+  let html='';
+  critical.forEach(d=>{
+    html+='<div class="alert-banner">⚠️ <strong>'+d.doNumber+'</strong> — '+d.client+' → '+d.destination+' '+statusBadge(d.status)+(d.blocker?' <span style="color:var(--muted);font-size:11px;">'+d.blocker+'</span>':'')+'</div>';
+  });
+  document.getElementById('alerts-container').innerHTML=html;
+}
+
+function renderRescheduleStrip(){
+  const state=getState();
+  const active=(state.reschedules||[]).filter(r=>!r.dismissed);
+  const strip=document.getElementById('reschedule-strip');
+  if(!active.length){strip.innerHTML='';return;}
+  strip.innerHTML='<div class="reschedule-strip"><div class="reschedule-strip-title">📅 '+t('rescheduledAlert')+' ('+active.length+')</div><div class="reschedule-cards">'+
+    active.map(r=>
+      '<div class="reschedule-card">'+
+      '<button class="rc-dismiss" onclick="dismissReschedule(\''+r.id+'\')">'+t('dismiss')+'</button>'+
+      '<div class="rc-badge">'+t('rescheduled')+'</div>'+
+      '<div class="rc-do">'+r.doNumber+'</div>'+
+      '<div class="rc-client">'+r.client+' → '+r.destination+'</div>'+
+      '<div class="rc-dates"><span class="rc-old-date">'+fmtDay(r.oldDate)+'</span><span class="rc-arrow">→</span><span class="rc-new-date">'+fmtDay(r.newDate)+'</span></div>'+
+      '<div class="rc-message">'+t('carrierAction')+'</div>'+
+      (r.reason?'<div style="font-size:11px;color:var(--muted);margin-bottom:5px;">'+r.reason+'</div>':'')+
+      '<div class="rc-by">'+t('moved')+' '+r.by+' · '+fmtDate(r.at)+'</div>'+
+      '</div>'
+    ).join('')+'</div></div>';
+}
+
+function dismissReschedule(id){
+  const state=getState();
+  const r=state.reschedules&&state.reschedules.find(x=>x.id===id);
+  if(r)r.dismissed=true;
+  saveState(state);renderRescheduleStrip();
+}
+
+// ─── SORT MODE ────────────────────────────────────────────────────────────────
+function toggleSortMode(){
+  sortByTime=!sortByTime;
+  const btn=document.getElementById('btn-sort');
+  if(btn){
+    btn.style.background=sortByTime?'var(--accent)':'';
+    btn.style.color=sortByTime?'#fff':'';
+    btn.style.borderColor=sortByTime?'var(--accent)':'';
+    btn.title=sortByTime?'Sort by shipment number':'Sort by appointment time';
+    btn.textContent=sortByTime?'🕐 By Time':'# By Shipment';
+  }
+  renderDays();
+}
+
+function getApptMinutes(sid){
+  const carrier=shipmentsMap[sid];
+  if(!carrier||!carrier.appointmentStart) return 99999; // no time = end
+  const appt=carrier.appointmentStart;
+  if(appt instanceof Date) return appt.getHours()*60+appt.getMinutes();
+  const d=new Date(appt);
+  if(!isNaN(d)) return d.getHours()*60+d.getMinutes();
+  // Try parsing HH:MM string
+  const m=String(appt).match(/(\d{1,2}):(\d{2})/);
+  if(m) return parseInt(m[1])*60+parseInt(m[2]);
+  return 99999;
+}
+
+// ─── DAYS ─────────────────────────────────────────────────────────────────────
+function renderDays(){
+  const state=getState();
+  const loads=state.dos.filter(d=>d.category==='Today'||d.category==='Recovery');
+  if(!loads.length){
+    document.getElementById('days-container').innerHTML='<div class="empty-state"><div class="empty-state-icon">📦</div><div class="empty-state-text">'+
+    (currentLang==='pt'?'Nenhuma carga. Importe a DPL ou clique em "+ Adicionar DO".':
+     currentLang==='es'?'Sin cargas. Importe la DPL o haga clic en "+ Agregar DO".':
+     'No loads. Upload a DPL or click "+ Add DO".')+'</div></div>';
+    return;
+  }
+  const groups={};
+  loads.forEach(d=>{ const k=d.loadingDate||'NoDate'; if(!groups[k])groups[k]=[]; groups[k].push(d); });
+  const todayStr=new Date().toISOString().split('T')[0];
+  const sortedKeys=Object.keys(groups).sort((a,b)=>{ if(a==='NoDate')return 1; if(b==='NoDate')return -1; return new Date(a)-new Date(b); });
+
+  document.getElementById('days-container').innerHTML=sortedKeys.map(key=>{
+    const dos=groups[key];
+    const shipped=dos.filter(d=>d.status==='Shipped'||d.status==='On Time').length;
+    const blocked=dos.filter(d=>['Blocked','No Show','Late','Vehicle Rejected'].includes(d.status)).length;
+    const rescheduled=dos.filter(d=>d.rescheduled).length;
+    const isToday=key===todayStr;
+    const isPast=key!=='NoDate'&&key<todayStr;
+    const isCollapsed=collapsedDays[key]!==undefined?collapsedDays[key]:(isPast&&!isToday);
+
+    // Subgroup by shipment
+    const shipGroups={};const unplanned=[];
+    dos.forEach(d=>{ if(d.shipmentId){if(!shipGroups[d.shipmentId])shipGroups[d.shipmentId]=[];shipGroups[d.shipmentId].push(d);}else unplanned.push(d); });
+    const totalShipments=Object.keys(shipGroups).length;
+
+    let tbodyRows='';
+    // Sort shipment groups by appointment time if sortByTime is on
+    const shipEntries=Object.entries(shipGroups);
+    if(sortByTime){
+      shipEntries.sort((a,b)=>getApptMinutes(a[0])-getApptMinutes(b[0]));
+    }
+    shipEntries.forEach(function(entry){
+      const sid=entry[0];const sidDos=entry[1];
+      const carrier=getCarrierInfo(sidDos[0]);
+      const allShipped=sidDos.every(d=>d.status==='Shipped'||d.status==='On Time');
+      const hasBlocked=sidDos.some(d=>['Blocked','No Show','Late','Vehicle Rejected'].includes(d.status));
+      const appt=carrier&&carrier.appointmentStart?fmtAppt(carrier.appointmentStart):'';
+      tbodyRows+='<tr class="shipment-group-row"><td colspan="11">'+
+        '<div class="shipment-group-header">'+
+        '<div class="sg-left">'+
+        '<span class="sg-id">'+sid+'</span>'+
+        '<span class="sg-count">'+sidDos.length+' '+t('dosSuffix')+' · 1 '+t('shipmentsSuffix').slice(0,-1)+'</span>'+
+        (allShipped?'<span class="sg-badge shipped">'+t('allShipped')+'</span>':hasBlocked?'<span class="sg-badge blocked">'+t('hasIssues')+'</span>':'')+
+        (appt?'<span class="appt-time">'+t('appt')+' '+appt+'</span>':'')+
+        '</div>'+
+        '<div class="sg-right">'+
+        (carrier?
+          '<span class="sg-carrier">'+carrier.carrier+'</span>'+
+          '<span class="'+(carrier.tenderAccepted?'carrier-accepted':'carrier-pending-txt')+'">'+t(carrier.tenderAccepted?'accepted':'pendingCarrier')+'</span>'+
+          (carrier.appointmentStart?'<span class="appt-time">'+t('appt')+' '+fmtAppt(carrier.appointmentStart)+'</span>':'')+
+          (carrier.isEnroute?'<span class="carrier-enroute">'+t('enRoute')+'</span>':'')+
+          (carrier.trackingUrl?'<a class="carrier-track" href="'+carrier.trackingUrl+'" target="_blank">'+t('track')+'</a>':''):
+          '<span style="font-family:var(--mono);font-size:9px;color:var(--muted);">'+t('noCarrier')+'</span>')+
+        (!allShipped?'<button class="btn-ship-all" onclick="markShipmentShipped(\''+sid+'\')">'+t('markShipped')+'</button>':'')+
+        '<button class="btn-icon" onclick="openShipmentStatusModal(\''+sid+'\')" style="font-size:11px;padding:4px 10px;">📋 All Status</button>'+
+        '</div></div></td></tr>';
+      sidDos.forEach(d=>{ tbodyRows+=renderDORow(d,true); });
+    });
+
+    if(unplanned.length){
+      tbodyRows+='<tr><td colspan="11" style="padding:0;border-bottom:1px solid var(--border);">'+
+        '<div style="display:flex;align-items:center;gap:10px;padding:10px 16px;background:var(--surface2);border-left:4px solid var(--muted);">'+
+        '<span style="font-family:var(--mono);font-size:12px;color:var(--muted);font-weight:700;">'+t('unplanned')+'</span>'+
+        '<span style="font-size:11px;color:var(--muted);">'+unplanned.length+' '+t('dosSuffix')+' — no carrier assigned</span>'+
+        '</div></td></tr>';
+      unplanned.forEach(d=>{ tbodyRows+=renderDORow(d,true); });
+    }
+
+    const safeKey=key.replace(/'/g,"\\'");
+    return '<div class="day-group animate-in" id="dg-'+key+'">'+
+      '<div class="day-header" onclick="toggleDay(\''+safeKey+'\')">'+
+      '<div class="day-header-left">'+
+      '<div class="day-label '+(isToday?'today':isPast?'past':'')+'">'+
+      (key==='NoDate'?t('noDateAssigned'):fmtDayFull(key))+(isToday?' — '+t('today'):'')+
+      '</div>'+
+      '<div class="day-counts">'+
+      '<span class="day-count total">'+dos.length+' '+t('dosSuffix')+'</span>'+
+      (totalShipments?'<span class="day-count total" style="border-color:rgba(0,212,255,0.25);">'+totalShipments+' '+t('shipmentsSuffix')+'</span>':'')+
+      (shipped?'<span class="day-count shipped" onclick="scrollToFirstStatus(event,\''+safeKey+'\',\'shipped\')">'+shipped+' '+t('shipped').toLowerCase()+'</span>':'')+
+      (blocked?'<span class="day-count blocked" onclick="scrollToFirstStatus(event,\''+safeKey+'\',\'issues\')">'+blocked+' issues</span>':'')+
+      (rescheduled?'<span class="day-count rescheduled" onclick="scrollToFirstStatus(event,\''+safeKey+'\',\'rescheduled\')">'+rescheduled+' '+t('rescheduled').toLowerCase()+'</span>':'')+
+      (unplanned.length?'<span class="day-count unplanned" onclick="scrollToFirstStatus(event,\''+safeKey+'\',\'unplanned\')">'+unplanned.length+' '+t('unplanned').toLowerCase()+'</span>':'')+
+      '</div></div>'+
+      '<div class="day-toggle"><span>'+(isCollapsed?'▸':'▾')+'</span></div>'+
+      '</div>'+
+      '<div class="day-body '+(isCollapsed?'collapsed':'')+'" id="db-'+key+'" style="max-height:'+(isCollapsed?'0':'9999px')+'">'+
+      '<div class="table-wrapper"><table class="do-table">'+
+      '<thead><tr>'+
+      '<th style="width:28px;"></th>'+
+      ['DO #',t('client')+' / '+t('destination'),t('product'),t('pallets'),t('loadingDate'),t('status'),t('assignees'),t('notes')+' / '+t('history'),'Updated','Actions']
+      .map(h=>'<th>'+h+'</th>').join('')+
+      '</tr></thead>'+
+      '<tbody>'+tbodyRows+'</tbody>'+
+      '</table></div></div></div>';
+  }).join('');
+}
+
+function renderDORow(d, indented){
+  const isRescheduled=d.rescheduled;
+  const indent=indented?'padding-left:24px;':'';
+  return '<tr class="'+(isRescheduled?'rescheduled-row':'do-row')+'" draggable="true"'+
+    ' ondragstart="onDragStart(event,\''+d.id+'\')" ondragover="onDragOver(event)" ondrop="onDrop(event,\''+d.id+'\')" ondragend="onDragEnd(event)"'+
+    ' id="row-'+d.id+'">'+
+    '<td style="width:32px;"><input type="checkbox" class="do-checkbox" id="chk-'+d.id+'" onchange="onCheckDO(\''+d.id+'\',this.checked)"></td>'+
+    '<td><div class="do-number" style="'+indent+'">'+d.doNumber+sapBadge(d.sapStatus||'')+'</div></td>'+
+    '<td style="max-width:160px;"><div class="do-client">'+d.client+'</div><div class="do-dest">'+d.destination+'</div></td>'+
+    '<td style="max-width:150px;"><div class="do-product">'+(d.product||'—')+'</div></td>'+
+    '<td style="width:60px;"><div style="font-family:var(--mono);font-size:12px;font-weight:500;text-align:center;">'+(d.pallets||'—')+'</div></td>'+
+    '<td><div class="date-cell">'+
+    '<div class="date-main">'+(fmtDay(d.loadingDate)||'—')+'</div>'+
+    (isRescheduled&&d.originalLoadingDate&&d.originalLoadingDate!==d.loadingDate?
+      '<div class="date-rescheduled">↩ was '+fmtDay(d.originalLoadingDate)+'</div>':'')+
+    '<button class="btn-change-date" onclick="openDateModal(\''+d.id+'\')">'+t('reschedule').split(' ')[0]+'</button>'+
+    '</div></td>'+
+    '<td>'+statusBadge(d.status)+'</td>'+
+    '<td><div style="display:flex;flex-wrap:wrap;gap:2px;">'+(d.assignees&&d.assignees.length?d.assignees.map(a=>'<span class="assignee">@'+a+'</span>').join(''):'<span style="color:var(--muted);font-size:11px;">—</span>')+'</div></td>'+
+    '<td><div class="note-text">'+(d.notes||'—')+'</div>'+
+    ((d.history||[]).length?
+      '<button class="history-toggle" onclick="toggleHistory(\'hist-'+d.id+'\')">'+t('history')+' ('+d.history.length+')</button>'+
+      '<div class="history-log" id="hist-'+d.id+'">'+
+      (d.history||[]).map(h=>'<div class="history-entry"><span class="he-time">'+fmtDate(h.at)+'</span><span class="he-user">'+h.by+'</span><span class="he-note '+(h.type==='reschedule'?'reschedule':'')+'">'+h.note+'</span></div>').join('')+
+      '</div>':'')+
+    '</td>'+
+    '<td style="width:90px;" title="'+(d.updatedBy||'')+(d.updatedAt?' · '+fmtDate(d.updatedAt):'')+'"><div style="font-family:var(--mono);font-size:9px;color:var(--muted);max-width:90px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+(d.updatedBy||'—')+'</div><div style="font-family:var(--mono);font-size:9px;color:var(--muted);margin-top:1px;">'+(d.updatedAt?fmtDate(d.updatedAt):'')+'</div></td>'+
+    '<td><div style="display:flex;gap:3px;flex-wrap:wrap;">'+
+    '<button class="btn-icon" onclick="openStatusModal(\''+d.id+'\')">'+t('status').replace(' *','')+'</button>'+
+    '<button class="btn-icon" onclick="openModal(\''+d.id+'\')">Edit</button>'+
+    '<button class="btn-icon" style="border-color:rgba(179,136,255,0.3);color:var(--purple);" onclick="openMoveModal(\''+d.id+'\')">Move</button>'+
+    '<button class="btn-icon danger" onclick="deleteDO(\''+d.id+'\')">✕</button>'+
+    '</div></td></tr>';
+}
+
+function toggleDay(key){
+  collapsedDays[key]=!collapsedDays[key];
+  const body=document.getElementById('db-'+key);
+  const header=document.getElementById('dg-'+key).querySelector('.day-toggle');
+  if(collapsedDays[key]){body.style.maxHeight='0';body.classList.add('collapsed');header.querySelector('span:first-child').textContent=t('expandAll').split(' ')[0];header.querySelector('.day-toggle-icon').style.transform='rotate(0deg)';}
+  else{body.style.maxHeight='9999px';body.classList.remove('collapsed');header.querySelector('span:first-child').textContent=t('collapseAll').split(' ')[0];header.querySelector('.day-toggle-icon').style.transform='rotate(180deg)';}
+}
+function expandAll(){const state=getState();state.dos.filter(d=>d.loadingDate||true).forEach(d=>{collapsedDays[d.loadingDate||'NoDate']=false;});renderDays();}
+function collapseAll(){const state=getState();const keys=[...new Set(state.dos.map(d=>d.loadingDate||'NoDate'))];keys.forEach(k=>{collapsedDays[k]=true;});renderDays();}
+
+// ─── PENDING ──────────────────────────────────────────────────────────────────
+function renderPending(){
+  const state=getState();
+  const dos=state.dos.filter(d=>d.category==='Pending'||['Blocked','Late','Vehicle Rejected'].includes(d.status));
+  const old=state.dos.filter(d=>{if(!d.loadingDate)return false;return(Date.now()-new Date(d.loadingDate))/86400000>7&&d.status!=='Shipped';});
+  document.getElementById('pending-alerts').innerHTML=old.map(d=>'<div class="alert-warn">🕐 DO <strong>'+d.doNumber+'</strong> — '+d.client+' — 7+ days open</div>').join('');
+  const tbody=document.getElementById('pending-tbody');
+  if(!dos.length){tbody.innerHTML='<tr><td colspan="8"><div class="empty-state"><div class="empty-state-icon">✅</div><div class="empty-state-text">'+t('openIssues')+': 0</div></div></td></tr>';return;}
+  tbody.innerHTML=dos.map(d=>{
+    const carrier=getCarrierInfo(d);
+    return '<tr>'+
+      '<td><div class="do-number">'+d.doNumber+'</div></td>'+
+      '<td><div class="do-client">'+d.client+'</div><div class="do-dest">'+d.destination+'</div></td>'+
+      '<td style="font-family:var(--mono);font-size:11px;color:var(--muted);">'+(fmtDay(d.loadingDate)||'—')+'</td>'+
+      '<td>'+statusBadge(d.status)+'</td>'+
+      '<td style="font-size:11px;color:var(--accent2);">'+(d.blocker||'—')+'</td>'+
+      '<td>'+(d.assignees&&d.assignees.length?d.assignees.map(a=>'<span class="assignee">@'+a+'</span>').join(''):'—')+'</td>'+
+      '<td><div class="note-text">'+(d.notes||'—')+'</div>'+
+      ((d.history||[]).length?'<button class="history-toggle" onclick="toggleHistory(\'hist-p-'+d.id+'\')">'+t('history')+' ('+d.history.length+')</button><div class="history-log" id="hist-p-'+d.id+'">'+d.history.map(h=>'<div class="history-entry"><span class="he-time">'+fmtDate(h.at)+'</span><span class="he-user">'+h.by+'</span><span class="he-note '+(h.type==='reschedule'?'reschedule':'')+'">'+h.note+'</span></div>').join('')+'</div>':'')+
+      '</td>'+
+      '<td><div style="display:flex;gap:3px;flex-wrap:wrap;">'+
+      '<button class="btn-icon" onclick="openStatusModal(\''+d.id+'\')">'+t('status').replace(' *','')+'</button>'+
+      '<button class="btn-icon" onclick="openModal(\''+d.id+'\')">Edit</button>'+
+      '<button class="btn-icon danger" onclick="deleteDO(\''+d.id+'\')">✕</button>'+
+      '</div></td></tr>';
+  }).join('');
+}
+
+function toggleHistory(id){document.getElementById(id).classList.toggle('open');}
+
+// ─── SHIPPED TODAY ────────────────────────────────────────────────────────────
+function renderShippedToday(){
+  const state=getState();
+  const todayStr=new Date().toISOString().split('T')[0];
+  const todayEntry=(state.shippedToday||[]).find(x=>x.date===todayStr);
+  const dos=todayEntry?todayEntry.dos:[];
+  const container=document.getElementById('shipped-today-container');
+  if(!dos.length){
+    container.innerHTML='<div class="empty-state"><div class="empty-state-icon">📦</div><div class="empty-state-text">No shipments yet today.</div></div>';
+    return;
+  }
+  // Group by shipment
+  const groups={};const unplanned=[];
+  dos.forEach(d=>{
+    if(d.shipmentId){if(!groups[d.shipmentId])groups[d.shipmentId]=[];groups[d.shipmentId].push(d);}
+    else unplanned.push(d);
+  });
+  let html='<div style="font-family:var(--mono);font-size:10px;color:var(--green);margin-bottom:16px;">✓ '+dos.length+' DO'+(dos.length!==1?'s':'')+' shipped today</div>';
+  Object.keys(groups).forEach(function(sid){
+    const sdos=groups[sid];
+    const carrier=getCarrierInfo(sdos[0]);
+    html+='<div class="day-group animate-in" style="margin-bottom:12px;">';
+    html+='<div class="day-header" style="cursor:default;background:rgba(0,230,118,0.05);border-left:3px solid var(--green);">';
+    html+='<div class="day-header-left">';
+    html+='<span class="sg-id">'+sid+'</span>';
+    html+='<span class="sg-count">'+sdos.length+' DO'+(sdos.length!==1?'s':'')+'</span>';
+    html+='<span class="sg-badge shipped">'+t('allShipped')+'</span>';
+    if(carrier){
+      html+='<span class="sg-carrier" style="margin-left:8px;">'+carrier.carrier+'</span>';
+      if(carrier.appointmentStart) html+='<span class="appt-time">'+t('appt')+' '+fmtAppt(carrier.appointmentStart)+'</span>';
+      if(carrier.trackingUrl) html+='<a class="carrier-track" href="'+carrier.trackingUrl+'" target="_blank">'+t('track')+'</a>';
+    }
+    html+='</div></div>';
+    html+='<div class="table-wrapper"><table class="do-table"><thead><tr>'+
+    ['DO #',t('client')+' / '+t('destination'),t('product'),t('pallets'),t('loadingDate'),t('assignees'),t('notes')]
+    .map(h=>'<th>'+h+'</th>').join('')+'</tr></thead><tbody>';
+    sdos.forEach(d=>{
+      html+='<tr><td><div class="do-number">'+d.doNumber+sapBadge(d.sapStatus||'')+'</div></td>'+
+      '<td><div class="do-client">'+d.client+'</div><div class="do-dest">'+d.destination+'</div></td>'+
+      '<td><div class="do-product">'+(d.product||'—')+'</div></td>'+
+      '<td style="text-align:center;font-family:var(--mono);font-size:12px;">'+(d.pallets||'—')+'</td>'+
+      '<td style="font-family:var(--mono);font-size:11px;color:var(--muted);">'+(fmtDay(d.loadingDate)||'—')+'</td>'+
+      '<td>'+(d.assignees&&d.assignees.length?d.assignees.map(a=>'<span class="assignee">@'+a+'</span>').join(''):'—')+'</td>'+
+      '<td><div class="note-text">'+(d.notes||'—')+'</div></td></tr>';
+    });
+    html+='</tbody></table></div></div>';
+  });
+  if(unplanned.length){
+    html+='<div class="day-group animate-in"><div class="day-header" style="cursor:default;"><div class="day-label">Unplanned</div></div>'+
+    '<div class="table-wrapper"><table class="do-table"><thead><tr>'+
+    ['DO #',t('client')+' / '+t('destination'),t('product'),t('pallets')]
+    .map(h=>'<th>'+h+'</th>').join('')+'</tr></thead><tbody>'+
+    unplanned.map(d=>'<tr><td><div class="do-number">'+d.doNumber+'</div></td><td><div class="do-client">'+d.client+'</div><div class="do-dest">'+d.destination+'</div></td><td><div class="do-product">'+(d.product||'—')+'</div></td><td style="text-align:center;font-family:var(--mono);">'+(d.pallets||'—')+'</td></tr>').join('')+
+    '</tbody></table></div></div>';
+  }
+  container.innerHTML=html;
+}
+
+// ─── AUDIT ────────────────────────────────────────────────────────────────────
+function renderAudit(){
+  const state=getState();
+  const log=[...(state.audit||[])].reverse();
+  const container=document.getElementById('audit-list');
+  if(!log.length){container.innerHTML='<div class="empty-state"><div class="empty-state-icon">📋</div><div class="empty-state-text">'+t('auditTracked')+'</div></div>';return;}
+  container.innerHTML=log.map(e=>'<div class="audit-entry"><div class="audit-time">'+fmtDate(e.at)+'</div><div class="audit-user">'+e.by+'</div><div class="audit-action">'+e.action+' — <strong>'+e.target+'</strong>'+(e.detail?': '+e.detail:'')+'</div></div>').join('');
+}
+
+function logAudit(action,target,detail){
+  const state=getState();
+  state.audit=state.audit||[];
+  state.audit.push({at:new Date().toISOString(),by:currentUser,action,target,detail});
+  saveState(state);
+}
+
+// ─── ARCHIVE ──────────────────────────────────────────────────────────────────
+function getWeekKey(date){
+  const d=new Date(date);d.setHours(0,0,0,0);d.setDate(d.getDate()+4-(d.getDay()||7));
+  const y=new Date(d.getFullYear(),0,1);
+  return d.getFullYear()+'-W'+String(Math.ceil((((d-y)/86400000)+1)/7)).padStart(2,'0');
+}
+function getWeekLabel(date){
+  const d=new Date(date);const day=d.getDay();
+  const mon=new Date(d);mon.setDate(d.getDate()-(day===0?6:day-1));
+  const sun=new Date(mon);sun.setDate(mon.getDate()+6);
+  const locale=currentLang==='pt'?'pt-BR':currentLang==='es'?'es-ES':'en-US';
+  return mon.toLocaleDateString(locale,{month:'short',day:'numeric'})+' – '+sun.toLocaleDateString(locale,{month:'short',day:'numeric',year:'numeric'});
+}
+
+function renderArchive(){
+  const state=getState();
+  const archive=state.archive||[];
+  const select=document.getElementById('archive-week-filter');
+  const cur=select.value;
+  select.innerHTML='<option value="all">'+t('allWeeks')+'</option>';
+  archive.forEach(w=>{const opt=document.createElement('option');opt.value=w.weekKey;opt.textContent=w.label;select.appendChild(opt);});
+  if(cur)select.value=cur;
+  const container=document.getElementById('archive-container');
+  if(!archive.length){container.innerHTML='<div class="empty-state"><div class="empty-state-icon">📦</div><div class="empty-state-text">'+t('noArchive')+'</div></div>';return;}
+  const filtered=select.value==='all'?archive:archive.filter(w=>w.weekKey===select.value);
+  container.innerHTML=filtered.map(week=>
+    '<div class="day-group animate-in" style="margin-bottom:14px;">'+
+    '<div class="day-header" style="cursor:default;">'+
+    '<div class="day-header-left"><div class="day-label">'+week.label+'</div><span class="day-count shipped">'+week.dos.length+' '+t('shipped').toLowerCase()+'</span></div>'+
+    '</div>'+
+    '<div class="day-body">'+
+    '<table class="do-table"><thead><tr>'+
+    ['DO #',t('client'),t('destination'),t('product'),t('pallets'),t('loadingDate'),'Shipment #',t('assignees'),t('notes')]
+    .map(h=>'<th>'+h+'</th>').join('')+'</tr></thead>'+
+    '<tbody>'+week.dos.map((d,i)=>
+      '<tr><td><div class="do-number">'+d.doNumber+sapBadge(d.sapStatus||'')+'</div></td>'+
+      '<td>'+d.client+'</td><td style="color:var(--muted);">'+d.destination+'</td>'+
+      '<td><div class="do-product">'+(d.product||'—')+'</div></td>'+
+      '<td style="font-family:var(--mono);font-size:12px;text-align:center;">'+(d.pallets||'—')+'</td>'+
+      '<td style="font-family:var(--mono);font-size:11px;color:var(--muted);">'+(fmtDay(d.loadingDate)||'—')+'</td>'+
+      '<td style="font-family:var(--mono);font-size:11px;color:var(--accent);">'+(d.shipmentId||'—')+'</td>'+
+      '<td>'+(d.assignees&&d.assignees.length?d.assignees.map(a=>'<span class="assignee">@'+a+'</span>').join(''):'—')+'</td>'+
+      '<td><div class="note-text">'+(d.notes||'—')+'</div></td></tr>'
+    ).join('')+'</tbody></table></div></div>'
+  ).join('');
+}
+
+function clearArchive(){
+  if(!confirm(t('confirmClearWeek')))return;
+  const state=getState();
+  const sel=document.getElementById('archive-week-filter').value;
+  state.archive=sel==='all'?[]:(state.archive||[]).filter(w=>w.weekKey!==sel);
+  saveState(state);logAudit('Archive Cleared',sel,'');renderArchive();
+}
+
+function clearAllData(){
+  if(!confirm(t('confirmResetAll')))return;
+  if(!confirm(t('confirmResetAll')))return;
+  localStorage.removeItem(getStorageKey());
+  renderAll();
+}
+
+// ─── BULK SELECTION ────────────────────────────────────────────────────────────
+function onCheckDO(id,checked){ if(checked)selectedDOs.add(id);else selectedDOs.delete(id);updateBulkBar(); }
+function updateBulkBar(){
+  const bar=document.getElementById('bulk-bar');
+  const count=document.getElementById('bulk-count');
+  if(selectedDOs.size>0){bar.style.display='flex';count.textContent=selectedDOs.size+' '+t('dosSuffix');}
+  else bar.style.display='none';
+}
+function clearSelection(){ selectedDOs.clear();document.querySelectorAll('.do-checkbox').forEach(c=>c.checked=false);updateBulkBar(); }
+function bulkUpdateStatus(status){
+  if(!selectedDOs.size)return;
+  if(!confirm(t('confirmBulkStatus')+' "'+status+'"?'))return;
+  const state=getState();const now=new Date().toISOString();
+  selectedDOs.forEach(id=>{
+    const idx=state.dos.findIndex(x=>x.id===id);if(idx===-1)return;
+    const old=state.dos[idx];
+    state.dos[idx]={...old,status,updatedBy:currentUser,updatedAt:now,history:[...(old.history||[]),{at:now,by:currentUser,note:'Status → '+status,type:'status'}]};
+  });
+  // Archive immediately if Shipped
+  if(status==='Shipped'){
+    const todayStr=new Date().toISOString().split('T')[0];
+    const wk=getWeekKey(new Date());
+    state.archive=state.archive||[];
+    if(!state.archive.find(a=>a.weekKey===wk)) state.archive.push({weekKey:wk,label:getWeekLabel(new Date()),dos:[]});
+    const week=state.archive.find(a=>a.weekKey===wk);
+    state.shippedToday=state.shippedToday||[];
+    const shippedIds=[...selectedDOs];
+    shippedIds.forEach(id=>{
+      const d=state.dos.find(x=>x.id===id);
+      if(d){
+        if(!week.dos.find(a=>a.doNumber===d.doNumber)) week.dos.push({...d,status});
+        const todayEntry=state.shippedToday.find(x=>x.date===todayStr);
+        if(todayEntry){if(!todayEntry.dos.find(a=>a.doNumber===d.doNumber))todayEntry.dos.push({...d,status});}
+        else state.shippedToday.push({date:todayStr,dos:[{...d,status}]});
+      }
+    });
+    state.dos=state.dos.filter(d=>!selectedDOs.has(d.id));
+  }
+  logAudit('Bulk Status',selectedDOs.size+' DOs',status);
+  saveState(state);clearSelection();renderAll();
+}
+function bulkDelete(){
+  if(!selectedDOs.size)return;
+  if(!confirm(t('confirmBulkDel')))return;
+  const state=getState();
+  state.dos=state.dos.filter(d=>!selectedDOs.has(d.id));
+  logAudit('Bulk Delete',selectedDOs.size+' DOs','');
+  saveState(state);clearSelection();renderAll();
+}
+function markShipmentShipped(sid){
+  if(!confirm(t('confirmShipAll')))return;
+  const state=getState();
+  const now=new Date().toISOString();
+  const todayStr=new Date().toISOString().split('T')[0];
+  const wk=getWeekKey(new Date());
+
+  // Collect DOs to ship
+  const toShip=state.dos.filter(d=>d.shipmentId===sid&&d.status!=='Shipped');
+  if(!toShip.length){alert('All DOs in this shipment are already shipped.');return;}
+
+  // Update status first
+  toShip.forEach(d=>{
+    const idx=state.dos.findIndex(x=>x.id===d.id);
+    if(idx!==-1){
+      state.dos[idx]={...d,status:'Shipped',updatedBy:currentUser,updatedAt:now,
+        history:[...(d.history||[]),{at:now,by:currentUser,note:'Status → Shipped (shipment bulk)',type:'status'}]};
+    }
+  });
+
+  // Archive and add to shippedToday
+  state.archive=state.archive||[];
+  if(!state.archive.find(a=>a.weekKey===wk)) state.archive.push({weekKey:wk,label:getWeekLabel(new Date()),dos:[]});
+  const week=state.archive.find(a=>a.weekKey===wk);
+  state.shippedToday=state.shippedToday||[];
+
+  const nowShipped=state.dos.filter(d=>d.shipmentId===sid&&d.status==='Shipped');
+  nowShipped.forEach(d=>{
+    if(!week.dos.find(a=>a.doNumber===d.doNumber)) week.dos.push({...d});
+    const todayEntry=state.shippedToday.find(x=>x.date===todayStr);
+    if(todayEntry){if(!todayEntry.dos.find(a=>a.doNumber===d.doNumber))todayEntry.dos.push({...d});}
+    else state.shippedToday.push({date:todayStr,dos:[{...d}]});
+  });
+
+  // Remove shipped from active list
+  state.dos=state.dos.filter(d=>!(d.shipmentId===sid&&d.status==='Shipped'));
+  logAudit('Shipment Shipped',sid,nowShipped.length+' DOs');
+  saveState(state);renderAll();
+}
+
+// ─── DRAG & DROP ──────────────────────────────────────────────────────────────
+let dragDoId=null;
+function onDragStart(e,id){dragDoId=id;e.currentTarget.classList.add('dragging');e.dataTransfer.effectAllowed='move';}
+function onDragOver(e){e.preventDefault();e.dataTransfer.dropEffect='move';}
+function onDrop(e,targetId){
+  e.preventDefault();if(!dragDoId||dragDoId===targetId)return;
+  const state=getState();
+  const dragged=state.dos.find(x=>x.id===dragDoId);
+  const target=state.dos.find(x=>x.id===targetId);
+  if(!dragged||!target||!target.shipmentId||dragged.shipmentId===target.shipmentId)return;
+  const old=dragged.shipmentId||'Unplanned';const now=new Date().toISOString();
+  dragged.shipmentId=target.shipmentId;dragged.updatedBy=currentUser;dragged.updatedAt=now;
+  dragged.history=[...(dragged.history||[]),{at:now,by:currentUser,note:'Moved: '+old+' → '+target.shipmentId,type:'move'}];
+  logAudit('Moved DO',dragged.doNumber,old+' → '+target.shipmentId);
+  saveState(state);renderAll();
+}
+function onDragEnd(e){e.currentTarget.classList.remove('dragging');dragDoId=null;}
+
+// ─── RENDER UNPLANNED ─────────────────────────────────────────────────────────
+function renderUnplanned(){
+  var state=getState();
+  var dos=state.dos.filter(function(d){return !d.shipmentId&&(d.category==='Today'||d.category==='Recovery');});
+  var container=document.getElementById('unplanned-container');
+  if(!dos.length){
+    container.innerHTML='<div class="empty-state"><div class="empty-state-icon">✅</div><div class="empty-state-text">No unplanned DOs.</div></div>';
+    return;
+  }
+  var tbody='';
+  dos.forEach(function(d){
+    var assigneeHtml=d.assignees&&d.assignees.length?d.assignees.map(function(a){return '<span class="assignee">@'+a+'</span>';}).join(''):'--';
+    var row='<tr>';
+    row+='<td><div class="do-number">'+d.doNumber+sapBadge(d.sapStatus||'')+'</div></td>';
+    row+='<td><div class="do-client">'+d.client+'</div><div class="do-dest">'+d.destination+'</div></td>';
+    row+='<td><div class="do-product">'+(d.product||'--')+'</div></td>';
+    row+='<td style="text-align:center;font-family:var(--mono);font-size:12px;">'+(d.pallets||'--')+'</td>';
+    row+='<td style="font-family:var(--mono);font-size:11px;">'+(fmtDay(d.loadingDate)||'--')+'</td>';
+    row+='<td>'+statusBadge(d.status)+'</td>';
+    row+='<td>'+assigneeHtml+'</td>';
+    row+='<td><div class="note-text">'+(d.notes||'--')+'</div></td>';
+    row+='<td><div style="display:flex;flex-direction:column;gap:3px;">';
+    row+='<button class="btn-icon" data-id="'+d.id+'" style="font-size:11px;" onclick="openStatusModal(this.dataset.id)">Status</button>';
+    row+='<button class="btn-icon" data-id="'+d.id+'" style="font-size:11px;" onclick="openModal(this.dataset.id)">Edit</button>';
+    row+='</div></td>';
+    row+='</tr>';
+    tbody+=row;
+  });
+  container.innerHTML='<div class="table-wrapper"><table class="do-table"><thead><tr><th>DO #</th><th>Client / Destination</th><th>Product</th><th>Pallets</th><th>Loading Date</th><th>Status</th><th>Assignees</th><th>Notes</th><th>Actions</th></tr></thead><tbody>'+tbody+'</tbody></table></div>';
+}
+
+// ─── EXPORT TO EXCEL ───────────────────────────────────────────────────────────
+function exportToExcel(){
+  document.getElementById('export-modal').classList.add('open');
+}
+
+function runExport(){
+  const type=document.getElementById('export-type').value;
+  const state=getState();
+  const todayStr=new Date().toISOString().split('T')[0];
+  let rows=[];
+  let sheetName='DMS Export';
+
+  if(type==='all'){
+    rows=state.dos;sheetName='All DOs';
+  } else if(type==='unplanned'){
+    rows=state.dos.filter(d=>!d.shipmentId);sheetName='Unplanned';
+  } else if(type==='issues'){
+    rows=state.dos.filter(d=>['Blocked','Late','No Show','Vehicle Rejected'].includes(d.status));sheetName='Issues';
+  } else if(type==='archive'){
+    const wk=getWeekKey(new Date());
+    const week=(state.archive||[]).find(a=>a.weekKey===wk);
+    rows=week?week.dos:[];sheetName='Archive-'+wk;
+  } else if(type==='Shipped'){
+    const entry=(state.shippedToday||[]).find(x=>x.date===todayStr);
+    rows=entry?entry.dos:[];sheetName='Shipped Today';
+  } else {
+    rows=state.dos.filter(d=>d.status===type);sheetName=type;
+  }
+
+  if(!rows.length){alert('No data found for this report.');return;}
+
+  const headers=['DO Number','SAP Status','Client','Destination','Product','Pallets','Loading Date','Delivery Date','Status','Shipment','Assignees','Notes','Blocker','Updated By','Updated At'];
+  const data=[headers,...rows.map(d=>[
+    d.doNumber||'',d.sapStatus||'',d.client||'',d.destination||'',
+    d.product||'',d.pallets||'',d.loadingDate||'',d.deliveryDate||'',
+    d.status||'',d.shipmentId||'',
+    (d.assignees||[]).join(', '),d.notes||'',d.blocker||'',
+    d.updatedBy||'',d.updatedAt?fmtDate(d.updatedAt):''
+  ])];
+
+  const ws=XLSX.utils.aoa_to_sheet(data);
+  const wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,ws,sheetName.substring(0,31));
+  XLSX.writeFile(wb,'DMS-Notes-'+sheetName+'-'+todayStr+'.xlsx');
+  document.getElementById('export-modal').classList.remove('open');
+}
+
+// ─── BACK TO TOP ───────────────────────────────────────────────────────────────
+(function(){
+  const btn=document.createElement('button');
+  btn.id='back-to-top';
+  btn.innerHTML='↑';
+  btn.title='Back to top';
+  btn.style.cssText='position:fixed;bottom:28px;right:28px;width:44px;height:44px;border-radius:50%;background:var(--accent);color:#fff;border:none;font-size:20px;font-weight:bold;cursor:pointer;box-shadow:0 4px 12px rgba(0,48,135,0.3);opacity:0;transition:opacity 0.3s;z-index:999;display:flex;align-items:center;justify-content:center;';
+  btn.onclick=()=>window.scrollTo({top:0,behavior:'smooth'});
+  document.addEventListener('DOMContentLoaded',()=>{
+    document.body.appendChild(btn);
+    window.addEventListener('scroll',()=>{
+      btn.style.opacity=window.scrollY>300?'1':'0';
+      btn.style.pointerEvents=window.scrollY>300?'auto':'none';
+    });
+  });
+})();
+
+// ─── SCROLL TO STATUS ─────────────────────────────────────────────────────────
+function scrollToFirstStatus(e,dayKey,type){
+  e.stopPropagation();
+  const state=getState();
+  const dayDos=state.dos.filter(d=>(d.loadingDate||'NoDate')===dayKey);
+  let target=null;
+  if(type==='shipped') target=dayDos.find(d=>d.status==='Shipped'||d.status==='On Time');
+  else if(type==='issues') target=dayDos.find(d=>['Blocked','No Show','Late','Vehicle Rejected'].includes(d.status));
+  else if(type==='rescheduled') target=dayDos.find(d=>d.rescheduled);
+  else if(type==='unplanned') target=dayDos.find(d=>!d.shipmentId);
+  if(!target)return;
+  if(collapsedDays[dayKey]){collapsedDays[dayKey]=false;renderDays();setTimeout(()=>scrollAndHighlight(target.id),200);}
+  else scrollAndHighlight(target.id);
+}
+function scrollAndHighlight(id){
+  const row=document.getElementById('row-'+id);if(!row)return;
+  row.scrollIntoView({behavior:'smooth',block:'center'});
+  row.classList.add('do-row-highlight');
+  setTimeout(()=>row.classList.remove('do-row-highlight'),2000);
+}
+
+// ─── MODALS ───────────────────────────────────────────────────────────────────
+function openModal(id,isPending){
+  assigneeTags=[];renderAssigneeTags();clearForm();
+  if(id){
+    const state=getState();const d=state.dos.find(x=>x.id===id);if(!d)return;
+    document.getElementById('modal-title').textContent=t('editDO');
+    document.getElementById('edit-id').value=d.id;
+    document.getElementById('f-do').value=d.doNumber;
+    document.getElementById('f-date').value=d.loadingDate||'';
+    document.getElementById('f-client').value=d.client;
+    document.getElementById('f-dest').value=d.destination;
+    document.getElementById('f-product').value=d.product||'';
+    document.getElementById('f-status').value=d.status;
+    document.getElementById('f-category').value=d.category;
+    document.getElementById('f-blocker').value=d.blocker||'';
+    document.getElementById('f-notes').value=d.notes||'';
+    assigneeTags=[...(d.assignees||[])];renderAssigneeTags();
+  }else{
+    document.getElementById('modal-title').textContent=isPending?t('addIssue'):t('addDO');
+    document.getElementById('edit-id').value='';
+    if(isPending)document.getElementById('f-category').value='Pending';
+  }
+  document.getElementById('modal').classList.add('open');
+}
+function closeModal(){document.getElementById('modal').classList.remove('open');}
+
+function clearForm(){
+  ['f-do','f-date','f-client','f-dest','f-product','f-blocker','f-notes'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('f-status').value='New';
+  document.getElementById('f-category').value='Today';
+  document.getElementById('edit-id').value='';
+}
+
+function saveDO(){
+  const doNum=document.getElementById('f-do').value.trim();
+  const client=document.getElementById('f-client').value.trim();
+  if(!doNum||!client){alert(t('doNumber')+' & '+t('client')+' required.');return;}
+  const state=getState();const editId=document.getElementById('edit-id').value;const now=new Date().toISOString();
+  const data={
+    doNumber:doNum,loadingDate:document.getElementById('f-date').value,client,
+    destination:document.getElementById('f-dest').value.trim(),
+    product:document.getElementById('f-product').value.trim(),
+    status:document.getElementById('f-status').value,
+    category:document.getElementById('f-category').value,
+    blocker:document.getElementById('f-blocker').value.trim(),
+    notes:document.getElementById('f-notes').value.trim(),
+    assignees:[...assigneeTags],updatedBy:currentUser,updatedAt:now,
+  };
+  if(editId){
+    const idx=state.dos.findIndex(x=>x.id===editId);
+    if(idx!==-1){
+      const old=state.dos[idx];
+      data.id=editId;data.createdAt=old.createdAt;data.createdBy=old.createdBy;
+      data.shipmentId=old.shipmentId||'';data.rescheduled=old.rescheduled||false;
+      data.originalLoadingDate=old.originalLoadingDate||old.loadingDate;
+      data.pallets=old.pallets||'';data.sapStatus=old.sapStatus||'';
+      data.history=old.history||[];
+      if(data.notes&&data.notes!==old.notes) data.history.push({at:now,by:currentUser,note:data.notes,type:'note'});
+      state.dos[idx]=data;logAudit('Edited DO',doNum,'Status: '+data.status);
+    }
+  }else{
+    data.id='do_'+Date.now()+'_'+Math.random().toString(36).slice(2,6);
+    data.createdAt=now;data.createdBy=currentUser;data.rescheduled=false;
+    data.originalLoadingDate=data.loadingDate;
+    data.history=data.notes?[{at:now,by:currentUser,note:data.notes,type:'note'}]:[];
+    state.dos.push(data);logAudit('Added DO',doNum,client+' → '+data.destination);
+  }
+  // Send assignee emails for newly added assignees
+  const prevAssignees=editId?(getState().dos.find(x=>x.id===editId)||{}).assignees||[]:[];
+  const newAssignees=data.assignees.filter(a=>!prevAssignees.includes(a));
+  if(newAssignees.length){
+    setTimeout(function(){
+      newAssignees.forEach(function(a){ sendAssigneeEmail(data,a); });
+    },500);
+  }
+  saveState(state);closeModal();renderAll();
+}
+
+function deleteDO(id){
+  if(!confirm('Delete DO?'))return;
+  const state=getState();const d=state.dos.find(x=>x.id===id);
+  state.dos=state.dos.filter(x=>x.id!==id);
+  logAudit('Deleted DO',d?.doNumber||id,'');saveState(state);renderAll();
+}
+
+function openStatusModal(id){
+  const state=getState();const d=state.dos.find(x=>x.id===id);if(!d)return;
+  document.getElementById('su-id').value=id;
+  document.getElementById('su-status').value=d.status;
+  document.getElementById('su-note').value='';
+  document.getElementById('status-modal').classList.add('open');
+}
+function closeStatusModal(){document.getElementById('status-modal').classList.remove('open');}
+
+let ssmSelectedDOs = new Set();
+let iemAssigneeTags = [];
+
+function openShipmentStatusModal(sid){
+  const state=getState();
+  const dos=state.dos.filter(d=>d.shipmentId===sid);
+  if(!dos.length){alert('No active DOs in this shipment.');return;}
+  document.getElementById('ssm-sid').value=sid;
+  document.getElementById('ssm-title').textContent='Shipment: '+sid+' ('+dos.length+' DOs)';
+  document.getElementById('ssm-status').innerHTML=STATUSES(currentLang).map(s=>'<option value="'+s.val+'">'+s.label+'</option>').join('');
+  document.getElementById('ssm-note').value='';
+  // Select all by default
+  ssmSelectedDOs=new Set(dos.map(d=>d.id));
+  renderSSMList(dos);
+  document.getElementById('shipment-status-modal').classList.add('open');
+}
+
+function renderSSMList(dos){
+  if(!dos){
+    const state=getState();
+    const sid=document.getElementById('ssm-sid').value;
+    dos=state.dos.filter(d=>d.shipmentId===sid);
+  }
+  var doRows=dos.map(function(d){
+    var chk=ssmSelectedDOs.has(d.id)?'checked':'';
+    var row='<div style="border:1px solid var(--border);border-radius:8px;margin-bottom:8px;overflow:hidden;">';
+    row+='<div style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--surface2);cursor:pointer;" onclick="toggleSSMExpand(\'ssm-exp-'+d.id+'\')">'; 
+    row+='<input type="checkbox" class="do-checkbox" '+chk+' onchange="toggleSSMSelect(\''+d.id+'\',this.checked)" onclick="event.stopPropagation()">';
+    row+='<span style="font-family:var(--mono);font-size:12px;color:var(--accent);font-weight:700;">'+d.doNumber+'</span>';
+    row+=sapBadge(d.sapStatus||'');
+    row+='<span style="font-size:12px;font-weight:500;flex:1;">'+d.client+'</span>';
+    row+='<span style="font-size:11px;color:var(--muted);">'+d.destination+'</span>';
+    row+=statusBadge(d.status);
+    row+='<span style="font-size:12px;color:var(--muted);">▾</span>';
+    row+='</div>';
+    row+='<div id="ssm-exp-'+d.id+'" style="display:none;padding:10px 12px;border-top:1px solid var(--border);background:var(--surface);">';
+    row+='<div style="display:flex;gap:8px;flex-wrap:wrap;">';
+    row+='<button class="btn-icon" style="font-size:11px;padding:5px 12px;" onclick="openInlineEdit(\''+d.id+'\')">✎ Edit</button>';
+    row+='<button class="btn-icon" style="font-size:11px;padding:5px 12px;color:var(--red);border-color:var(--red-border);" onclick="inlineDeleteDOById(\''+d.id+'\')">✕ Delete</button>';
+    row+='</div>';
+    if(d.notes) row+='<div style="margin-top:8px;font-size:11px;color:var(--muted);">'+d.notes+'</div>';
+    if(d.blocker) row+='<div style="margin-top:4px;font-size:11px;color:var(--red);">⚠ '+d.blocker+'</div>';
+    if(d.assignees&&d.assignees.length) row+='<div style="margin-top:6px;">'+d.assignees.map(function(a){return '<span class="assignee">@'+a+'</span>';}).join('')+'</div>';
+    row+='</div></div>';
+    return row;
+  });
+  document.getElementById('ssm-do-list').innerHTML=
+    '<div style="font-family:var(--mono);font-size:10px;color:var(--muted);margin-bottom:10px;text-transform:uppercase;letter-spacing:1px;">'+
+    dos.length+' DOs — check to include in status update:</div>'+
+    doRows.join('');
+}
+
+function toggleSSMExpand(id){
+  const el=document.getElementById(id);
+  if(el) el.style.display=el.style.display==='none'?'block':'none';
+}
+
+function toggleSSMSelect(id, checked){
+  if(checked) ssmSelectedDOs.add(id);
+  else ssmSelectedDOs.delete(id);
+}
+
+function closeShipmentStatusModal(){
+  document.getElementById('shipment-status-modal').classList.remove('open');
+  ssmSelectedDOs=new Set();
+}
+
+// ── INLINE EDIT ──────────────────────────────────────────────────────────────
+function openInlineEdit(id){
+  const state=getState();
+  const d=state.dos.find(x=>x.id===id);
+  if(!d)return;
+  document.getElementById('iem-id').value=id;
+  document.getElementById('iem-return-sid').value=d.shipmentId||'';
+  document.getElementById('iem-do').value=d.doNumber;
+  document.getElementById('iem-date').value=d.loadingDate||'';
+  document.getElementById('iem-client').value=d.client||'';
+  document.getElementById('iem-dest').value=d.destination||'';
+  document.getElementById('iem-product').value=d.product||'';
+  document.getElementById('iem-status').innerHTML=STATUSES(currentLang).map(s=>'<option value="'+s.val+'"'+(s.val===d.status?' selected':'')+'>'+s.label+'</option>').join('');
+  document.getElementById('iem-shipment').value=d.shipmentId||'';
+  document.getElementById('iem-blocker').value=d.blocker||'';
+  document.getElementById('iem-notes').value=d.notes||'';
+  document.getElementById('iem-title').textContent='Edit DO '+d.doNumber;
+  iemAssigneeTags=[...(d.assignees||[])];
+  renderIEMAssigneeTags();
+  document.getElementById('iem-assignee-input').addEventListener('keydown',function(e){
+    if(e.key==='Enter'||e.key===','){e.preventDefault();const v=e.target.value.trim();if(v){iemAssigneeTags.push(v);renderIEMAssigneeTags();e.target.value='';}}
+  },{once:true});
+  document.getElementById('inline-edit-modal').classList.add('open');
+}
+
+function renderIEMAssigneeTags(){
+  const container=document.getElementById('iem-assignee-container');
+  const input=document.getElementById('iem-assignee-input');
+  container.innerHTML='';
+  iemAssigneeTags.forEach(tag=>{
+    const pill=document.createElement('div');pill.className='tag-pill';
+    pill.dataset.tag=tag;
+    pill.innerHTML=tag+'<button onclick="var t=this.parentElement.dataset.tag;iemAssigneeTags=iemAssigneeTags.filter(function(x){return x!==t;});renderIEMAssigneeTags();">×</button>';
+    container.appendChild(pill);
+  });
+  container.appendChild(input);
+  input.placeholder=currentLang==='pt'?'Nome e Enter...':currentLang==='es'?'Nombre y Enter...':'Name and Enter...';
+}
+
+function closeInlineEdit(){
+  document.getElementById('inline-edit-modal').classList.remove('open');
+}
+
+function saveInlineEdit(){
+  const id=document.getElementById('iem-id').value;
+  const state=getState();
+  const idx=state.dos.findIndex(x=>x.id===id);
+  if(idx===-1)return;
+  const old=state.dos[idx];
+  const now=new Date().toISOString();
+  const newShipment=document.getElementById('iem-shipment').value.trim();
+  const newStatus=document.getElementById('iem-status').value;
+  const newNotes=document.getElementById('iem-notes').value.trim();
+  const history=[...(old.history||[])];
+  if(newStatus!==old.status) history.push({at:now,by:currentUser,note:'Status → '+newStatus,type:'status'});
+  if(newNotes&&newNotes!==old.notes) history.push({at:now,by:currentUser,note:newNotes,type:'note'});
+  if(newShipment!==old.shipmentId) history.push({at:now,by:currentUser,note:'Moved: '+(old.shipmentId||'Unplanned')+' → '+(newShipment||'Unplanned'),type:'move'});
+  state.dos[idx]={...old,
+    loadingDate:document.getElementById('iem-date').value,
+    client:document.getElementById('iem-client').value.trim(),
+    destination:document.getElementById('iem-dest').value.trim(),
+    product:document.getElementById('iem-product').value.trim(),
+    status:newStatus,
+    shipmentId:newShipment,
+    blocker:document.getElementById('iem-blocker').value.trim(),
+    notes:newNotes,
+    assignees:[...iemAssigneeTags],
+    updatedBy:currentUser,updatedAt:now,history
+  };
+  // Handle shipped
+  if(newStatus==='Shipped'){
+    const todayStr=new Date().toISOString().split('T')[0];
+    const wk=getWeekKey(new Date());
+    state.archive=state.archive||[];
+    if(!state.archive.find(a=>a.weekKey===wk)) state.archive.push({weekKey:wk,label:getWeekLabel(new Date()),dos:[]});
+    const week=state.archive.find(a=>a.weekKey===wk);
+    const updatedDO=state.dos[idx];
+    if(!week.dos.find(a=>a.doNumber===updatedDO.doNumber)) week.dos.push({...updatedDO});
+    state.shippedToday=state.shippedToday||[];
+    const todayEntry=state.shippedToday.find(x=>x.date===todayStr);
+    if(todayEntry){if(!todayEntry.dos.find(a=>a.doNumber===updatedDO.doNumber))todayEntry.dos.push({...updatedDO});}
+    else state.shippedToday.push({date:todayStr,dos:[{...updatedDO}]});
+    state.dos.splice(idx,1);
+  }
+  logAudit('DO Updated',old.doNumber,'via Shipment Modal');
+  saveState(state);
+  closeInlineEdit();
+  // Refresh shipment modal if still open
+  const sid=document.getElementById('ssm-sid').value;
+  if(sid&&document.getElementById('shipment-status-modal').classList.contains('open')){
+    renderSSMList();
+  }
+  renderAll();
+}
+
+function inlineDeleteDOById(id){
+  if(!confirm('Delete this DO?'))return;
+  const state=getState();
+  const d=state.dos.find(x=>x.id===id);
+  state.dos=state.dos.filter(x=>x.id!==id);
+  logAudit('Deleted DO',d?.doNumber||id,'via Shipment Modal');
+  saveState(state);
+  const sid=document.getElementById('ssm-sid').value;
+  const remaining=state.dos.filter(d=>d.shipmentId===sid);
+  if(!remaining.length){closeShipmentStatusModal();}
+  else renderSSMList(remaining);
+  renderAll();
+}
+
+function inlineDeleteDO(){
+  const id=document.getElementById('iem-id').value;
+  closeInlineEdit();
+  inlineDeleteDOById(id);
+}
+
+function saveShipmentStatus(){
+  const sid=document.getElementById('ssm-sid').value;
+  const newStatus=document.getElementById('ssm-status').value;
+  const note=document.getElementById('ssm-note').value.trim();
+  if(!ssmSelectedDOs.size){alert('Please select at least one DO.');return;}
+  const state=getState();
+  const now=new Date().toISOString();
+  const todayStr=new Date().toISOString().split('T')[0];
+  let count=0;
+
+  // Handle Shipped separately
+  if(newStatus==='Shipped'){
+    // Only ship selected DOs
+    const toShip=state.dos.filter(d=>ssmSelectedDOs.has(d.id));
+    const wk=getWeekKey(new Date());
+    state.archive=state.archive||[];
+    if(!state.archive.find(a=>a.weekKey===wk)) state.archive.push({weekKey:wk,label:getWeekLabel(new Date()),dos:[]});
+    const week=state.archive.find(a=>a.weekKey===wk);
+    state.shippedToday=state.shippedToday||[];
+    toShip.forEach(d=>{
+      const idx2=state.dos.findIndex(x=>x.id===d.id);
+      if(idx2===-1)return;
+      state.dos[idx2]={...d,status:'Shipped',updatedBy:currentUser,updatedAt:now,
+        history:[...(d.history||[]),{at:now,by:currentUser,note:'Status → Shipped',type:'status'}]};
+      const updated=state.dos[idx2];
+      if(!week.dos.find(a=>a.doNumber===updated.doNumber)) week.dos.push({...updated});
+      const todayEntry=state.shippedToday.find(x=>x.date===todayStr);
+      if(todayEntry){if(!todayEntry.dos.find(a=>a.doNumber===updated.doNumber))todayEntry.dos.push({...updated});}
+      else state.shippedToday.push({date:todayStr,dos:[{...updated}]});
+    });
+    state.dos=state.dos.filter(d=>!(ssmSelectedDOs.has(d.id)&&d.status==='Shipped'));
+    logAudit('Shipment Shipped (partial)',sid,toShip.length+' DOs');
+    saveState(state);closeShipmentStatusModal();renderAll();
+    return;
+  }
+
+  state.dos.forEach((d,idx)=>{
+    if(!ssmSelectedDOs.has(d.id)) return;
+    const noteEntry=note?'['+newStatus+'] '+note:'Status → '+newStatus;
+    state.dos[idx]={...d,status:newStatus,updatedBy:currentUser,updatedAt:now,
+      blocker:['Blocked','No Show','Late','Vehicle Rejected'].includes(newStatus)&&note?note:(d.blocker||''),
+      history:[...(d.history||[]),{at:now,by:currentUser,note:noteEntry,type:'status'}]};
+    count++;
+  });
+
+  logAudit('Shipment Status Update',sid,count+' DOs → '+newStatus+(note?' | '+note:''));
+  saveState(state);
+
+  // Send alert emails if critical status
+  const issueStatuses=['Blocked','No Show','Late','Vehicle Rejected'];
+  if(issueStatuses.includes(newStatus)){
+    const updatedDos=state.dos.filter(d=>d.shipmentId===sid&&d.assignees&&d.assignees.length);
+    if(updatedDos.length){
+      // Collect all unique assignees across all DOs in shipment
+      const allAssignees=[...new Set(updatedDos.flatMap(d=>d.assignees))];
+      if(allAssignees.length){
+        const emails=allAssignees.map(a=>buildEmail(a)).join(';');
+        const subject=encodeURIComponent('[DMS Notes] ALERT — Shipment '+sid+' — '+newStatus);
+        const L=[
+          'ALERT: All DOs in shipment '+sid+' have been marked as '+newStatus.toUpperCase()+'.',
+          '',
+          'Shipment: '+sid,
+          'Status: '+newStatus.toUpperCase(),
+          (note?'Note: '+note:''),
+          '',
+          'Affected DOs:',
+          ...updatedDos.map(d=>'  DO '+d.doNumber+' | '+d.client+' → '+d.destination),
+          '',
+          'Updated by: '+currentUser,
+          '',
+          'Please take action as soon as possible.',
+          '',
+          'Tetra Pak Materials -- DMS Notes System'
+        ].filter(x=>x!==undefined);
+        const body=encodeURIComponent(L.join('\n'));
+        setTimeout(()=>{window.open('mailto:'+emails+'?subject='+subject+'&body='+body);},300);
+      }
+    }
+  }
+
+  closeShipmentStatusModal();
+  renderAll();
+}
+
+function saveStatus(){
+  const id=document.getElementById('su-id').value;
+  const newStatus=document.getElementById('su-status').value;
+  const note=document.getElementById('su-note').value.trim();
+  const now=new Date().toISOString();
+  const state=getState();const idx=state.dos.findIndex(x=>x.id===id);if(idx===-1)return;
+  const old=state.dos[idx];
+  state.dos[idx]={...old,status:newStatus,updatedBy:currentUser,updatedAt:now,
+    notes:note||old.notes,
+    history:[...(old.history||[]),{at:now,by:currentUser,note:note?'['+newStatus+'] '+note:'Status → '+newStatus,type:'status'}]};
+  logAudit('Status Update',old.doNumber,old.status+' → '+newStatus+(note?' | '+note:''));
+  // If marked as Shipped or On Time - move to archive immediately
+  if(newStatus==='Shipped'){
+    const todayStr=new Date().toISOString().split('T')[0];
+    const wk=getWeekKey(new Date());
+    state.archive=state.archive||[];
+    if(!state.archive.find(a=>a.weekKey===wk)) state.archive.push({weekKey:wk,label:getWeekLabel(new Date()),dos:[]});
+    const week=state.archive.find(a=>a.weekKey===wk);
+    const updatedDO=state.dos.find(x=>x.id===id);
+    if(updatedDO&&!week.dos.find(a=>a.doNumber===updatedDO.doNumber)){
+      // Keep a copy in shippedToday
+      state.shippedToday=state.shippedToday||[];
+      const todayEntry=state.shippedToday.find(x=>x.date===todayStr);
+      if(todayEntry){if(!todayEntry.dos.find(a=>a.doNumber===updatedDO.doNumber))todayEntry.dos.push({...updatedDO,status:newStatus});}
+      else state.shippedToday.push({date:todayStr,dos:[{...updatedDO,status:newStatus}]});
+      week.dos.push({...updatedDO,status:newStatus});
+      state.dos=state.dos.filter(x=>x.id!==id);
+    }
+  }
+  saveState(state);closeStatusModal();renderAll();
+  // Send alert email if status is critical and DO has assignees
+  const issueStatuses=['Blocked','No Show','Late','Vehicle Rejected'];
+  if(issueStatuses.includes(newStatus)){
+    const updatedDO=getState().dos.find(x=>x.id===id);
+    if(updatedDO&&updatedDO.assignees&&updatedDO.assignees.length){
+      setTimeout(function(){ sendAlertEmail(updatedDO); },500);
+    }
+  }
+}
+
+function openDateModal(id){
+  const state=getState();const d=state.dos.find(x=>x.id===id);if(!d)return;
+  document.getElementById('dm-id').value=id;
+  document.getElementById('dm-date').value=d.loadingDate||'';
+  document.getElementById('dm-reason').value='';
+  document.getElementById('dm-info').innerHTML=
+    '<div class="dci-row"><span class="dci-label">DO:</span><span style="color:var(--accent);font-family:var(--mono);">'+d.doNumber+'</span></div>'+
+    '<div class="dci-row"><span class="dci-label">'+t('client').replace(' *','')+':</span><span>'+d.client+'</span></div>'+
+    '<div class="dci-row"><span class="dci-label">'+t('loadingDate')+':</span><span>'+(fmtDay(d.loadingDate)||'—')+'</span></div>'+
+    (d.originalLoadingDate&&d.originalLoadingDate!==d.loadingDate?'<div class="dci-row"><span class="dci-label">Original:</span><span style="color:var(--muted);">'+fmtDay(d.originalLoadingDate)+'</span></div>':'');
+  document.getElementById('date-modal').classList.add('open');
+}
+function closeDateModal(){document.getElementById('date-modal').classList.remove('open');}
+
+function saveDateChange(){
+  const id=document.getElementById('dm-id').value;
+  const newDate=document.getElementById('dm-date').value;
+  const reason=document.getElementById('dm-reason').value.trim();
+  if(!newDate){alert(t('newDate'));return;}
+  const state=getState();const idx=state.dos.findIndex(x=>x.id===id);if(idx===-1)return;
+  const old=state.dos[idx];const oldDate=old.loadingDate;
+  if(newDate===oldDate){closeDateModal();return;}
+  const now=new Date().toISOString();
+  const noteText=t('carrierAction')+(reason?' Reason: '+reason:'');
+  state.reschedules=state.reschedules||[];
+  state.reschedules.push({id:'rs_'+Date.now(),doId:id,doNumber:old.doNumber,client:old.client,destination:old.destination,oldDate,newDate,reason,by:currentUser,at:now,dismissed:false});
+  state.dos[idx]={...old,loadingDate:newDate,rescheduled:true,updatedBy:currentUser,updatedAt:now,
+    history:[...(old.history||[]),{at:now,by:currentUser,note:noteText,type:'reschedule'}]};
+  logAudit('Rescheduled',old.doNumber,fmtDay(oldDate)+' → '+fmtDay(newDate)+(reason?' | '+reason:''));
+  saveState(state);closeDateModal();renderAll();
+}
+
+function openMoveModal(id){
+  const state=getState();const d=state.dos.find(x=>x.id===id);if(!d)return;
+  document.getElementById('mv-id').value=id;
+  document.getElementById('mv-do-info').textContent=d.doNumber+' — '+d.client+' → '+d.destination;
+  document.getElementById('mv-shipment').value=d.shipmentId||'';
+  document.getElementById('mv-user-info').textContent=t('moved')+': '+currentUser;
+  document.getElementById('move-modal').classList.add('open');
+}
+function closeMoveModal(){document.getElementById('move-modal').classList.remove('open');}
+
+function saveMoveShipment(){
+  const id=document.getElementById('mv-id').value;
+  const newShipment=document.getElementById('mv-shipment').value.trim();
+  // Allow empty to move to Unplanned
+  const state=getState();const idx=state.dos.findIndex(x=>x.id===id);if(idx===-1)return;
+  const old=state.dos[idx];const oldSid=old.shipmentId||'Unplanned';
+  const now=new Date().toISOString();
+  state.dos[idx]={...old,shipmentId:newShipment,updatedBy:currentUser,updatedAt:now,
+    history:[...(old.history||[]),{at:now,by:currentUser,note:'Moved: '+oldSid+' → '+newShipment,type:'move'}]};
+  logAudit('Moved DO',old.doNumber,oldSid+' → '+newShipment);
+  saveState(state);closeMoveModal();renderAll();
+}
+
+// ─── ASSIGNEE TAGS ────────────────────────────────────────────────────────────
+function addAssigneeTag(val){if(!assigneeTags.includes(val)){assigneeTags.push(val);renderAssigneeTags();}}
+function removeAssigneeTag(val){assigneeTags=assigneeTags.filter(x=>x!==val);renderAssigneeTags();}
+function renderAssigneeTags(){
+  const container=document.getElementById('assignee-container');
+  const input=document.getElementById('assignee-input');
+  container.innerHTML='';
+  assigneeTags.forEach(t=>{
+    const pill=document.createElement('div');pill.className='tag-pill';
+    pill.innerHTML=t+'<button onclick="removeAssigneeTag(\''+t+'\')">×</button>';
+    container.appendChild(pill);
+  });
+  container.appendChild(input);
+}
+
+// ─── HELPERS ──────────────────────────────────────────────────────────────────
+function statusBadge(status){
+  const map={'Shipped':'shipped','Pending':'pending','Blocked':'blocked','Loading':'loading','New':'new','No Show':'noshow','On Time':'ontime','Late':'late','Vehicle Rejected':'rejected'};
+  return '<span class="badge badge-'+(map[status]||'new')+'">'+status+'</span>';
+}
+function sapBadge(s){
+  if(!s)return '';
+  const cls=s==='Ckd'?'ckd':s==='Prcd'?'prcd':'new-sap';
+  return '<span class="sap-badge '+cls+'">'+s+'</span>';
+}
+function fmtDate(iso){
+  if(!iso)return '';
+  const d=new Date(iso);
+  const locale=currentLang==='pt'?'pt-BR':currentLang==='es'?'es-ES':'en-US';
+  return d.toLocaleDateString(locale,{month:'short',day:'numeric'})+' '+d.toLocaleTimeString(locale,{hour:'2-digit',minute:'2-digit'});
+}
+function fmtDay(str){
+  if(!str)return '';
+  const d=new Date(str+'T12:00:00');
+  const locale=currentLang==='pt'?'pt-BR':currentLang==='es'?'es-ES':'en-US';
+  return d.toLocaleDateString(locale,{month:'short',day:'numeric',year:'numeric'});
+}
+function fmtDayFull(str){
+  if(!str)return '';
+  const d=new Date(str+'T12:00:00');
+  const locale=currentLang==='pt'?'pt-BR':currentLang==='es'?'es-ES':'en-US';
+  return d.toLocaleDateString(locale,{weekday:'long',month:'long',day:'numeric',year:'numeric'});
+}
+function fmtAppt(val){
+  if(!val)return '';
+  if(val instanceof Date) return val.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'});
+  const d=new Date(val);
+  if(isNaN(d))return val.toString().substring(0,16);
+  return d.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'});
+}
+
+// ─── EMAIL VIA MAILTO ────────────────────────────────────────────────────────
+function buildEmail(name){
+  const parts=name.trim().split(' ');
+  return parts.length>=2?parts[0]+'.'+parts[parts.length-1]+'@tetrapak.com':parts[0]+'@tetrapak.com';
+}
+
+function sendAssigneeEmail(doData, assigneeName){
+  const email=buildEmail(assigneeName);
+  const parts=assigneeName.trim().split(' ');
+  const firstName=parts[0];
+  const subject=encodeURIComponent('[DMS Notes] You have been assigned to DO '+doData.doNumber);
+  const lines=[
+    'Hi '+firstName+',',
+    '',
+    'You have been assigned to a delivery order that requires your attention.',
+    '',
+    'DO Number: '+doData.doNumber,
+    'Client: '+doData.client,
+    'Destination: '+doData.destination,
+    'Loading Date: '+(fmtDay(doData.loadingDate)||'--'),
+    'Status: '+doData.status,
+  ];
+  if(doData.notes) lines.push('Notes: '+doData.notes);
+  if(doData.blocker) lines.push('Blocker: '+doData.blocker);
+  lines.push('','Assigned by: '+currentUser,'','Please log in to DMS Notes for more details.','','Tetra Pak Materials -- DMS Notes System');
+  const body=encodeURIComponent(lines.join('\r\n'));
+  window.open('mailto:'+email+'?subject='+subject+'&body='+body);
+}
+
+function sendAlertEmail(doData){
+  if(!doData.assignees||!doData.assignees.length)return;
+  const emails=doData.assignees.map(a=>buildEmail(a)).join(';');
+  const subject=encodeURIComponent('[DMS Notes] ALERT -- DO '+doData.doNumber+' -- '+doData.status);
+  const lines=[
+    'ALERT: A delivery order assigned to you requires immediate attention.',
+    '',
+    'DO Number: '+doData.doNumber,
+    'Client: '+doData.client,
+    'Destination: '+doData.destination,
+    'Loading Date: '+(fmtDay(doData.loadingDate)||'--'),
+    'Status: '+doData.status.toUpperCase(),
+  ];
+  if(doData.blocker) lines.push('Issue: '+doData.blocker);
+  if(doData.notes) lines.push('Notes: '+doData.notes);
+  lines.push('','Updated by: '+currentUser,'','Please take action as soon as possible.','','Tetra Pak Materials -- DMS Notes System');
+  const body=encodeURIComponent(lines.join('\r\n'));
+  window.open('mailto:'+emails+'?subject='+subject+'&body='+body);
+}
+
+function sendDailyNotes(){
+  const state=getState();
+  const today=new Date().toISOString().split('T')[0];
+
+  // Include ALL loads - not just todays date - so imported DPL always shows
+  const todayDos=state.dos.filter(d=>d.category==='Today'||d.category==='Recovery');
+  const shipped=todayDos.filter(d=>d.status==='Shipped').length;
+  const blocked=todayDos.filter(d=>['Blocked','No Show','Late','Vehicle Rejected'].includes(d.status)).length;
+  const pending=state.dos.filter(d=>d.category==='Pending').length;
+  const rescheduled=state.dos.filter(d=>d.rescheduled).length;
+
+  const shipGroups={};const unplanned=[];
+  todayDos.forEach(d=>{
+    if(d.shipmentId){if(!shipGroups[d.shipmentId])shipGroups[d.shipmentId]=[];shipGroups[d.shipmentId].push(d);}
+    else unplanned.push(d);
+  });
+
+  const sess=JSON.parse(localStorage.getItem('dms_session')||'{}');
+  const factoryObj=sess.factory||{};
+  const factoryName=typeof factoryObj==='object'?(factoryObj.name||String(factoryObj)):String(factoryObj);
+  const dateStr=new Date().toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric',year:'numeric'});
+  const SEP='='.repeat(50);const SEP2='-'.repeat(40);
+  const L=[];
+
+  L.push('DMS NOTES -- '+factoryName.toUpperCase());
+  L.push(dateStr);
+  L.push(SEP);
+  L.push('');
+  L.push('SUMMARY');
+  L.push('Total DOs: '+todayDos.length+' | Shipped: '+shipped+' | Issues: '+blocked+' | Open Issues: '+pending+' | Rescheduled: '+rescheduled);
+  L.push('');
+
+  // Issues section
+  const issues=todayDos.filter(d=>['Blocked','No Show','Late','Vehicle Rejected'].includes(d.status));
+  if(issues.length){
+    L.push('*** ISSUES REQUIRING ATTENTION ***');
+    L.push(SEP2);
+    issues.forEach(d=>{
+      L.push('DO '+d.doNumber+' | '+d.client+' -> '+d.destination+' | '+d.status.toUpperCase());
+      if(d.blocker) L.push('   Issue: '+d.blocker);
+      if(d.assignees&&d.assignees.length) L.push('   Assigned: @'+d.assignees.join(', @'));
+      if(d.notes) L.push('   Note: '+d.notes);
+    });
+    L.push('');
+  }
+
+  // Reschedule alerts
+  const rsch=(state.reschedules||[]).filter(r=>!r.dismissed);
+  if(rsch.length){
+    L.push('*** RESCHEDULE ALERTS ***');
+    L.push(SEP2);
+    rsch.forEach(r=>{
+      L.push('DO '+r.doNumber+' | '+r.client+' -> '+r.destination);
+      L.push('   New date: '+fmtDay(r.newDate)+' (was '+fmtDay(r.oldDate)+')');
+      L.push('   Action: Please reschedule with the carrier.');
+      if(r.reason) L.push('   Reason: '+r.reason);
+    });
+    L.push('');
+  }
+
+  // All loads by shipment
+  L.push("ALL LOADS BY SHIPMENT");
+  L.push(SEP2);
+
+  Object.keys(shipGroups).forEach(function(sid){
+    const dos=shipGroups[sid];
+    const allShipped=dos.every(d=>d.status==='Shipped'||d.status==='On Time');
+    const hasIssue=dos.some(d=>['Blocked','No Show','Late','Vehicle Rejected'].includes(d.status));
+    L.push('');
+    L.push('Shipment: '+sid+(allShipped?' [ALL SHIPPED]':hasIssue?' [HAS ISSUES]':''));
+    dos.forEach(d=>{
+      const hasProb=['Blocked','No Show','Late','Vehicle Rejected'].includes(d.status);
+      let line='  DO '+d.doNumber+' | '+d.client+' -> '+d.destination;
+      if(d.pallets) line+=' | '+d.pallets+' pallets';
+      line+=' | '+d.status.toUpperCase();
+      if(hasProb&&d.blocker) line+=' | ISSUE: '+d.blocker;
+      if(d.assignees&&d.assignees.length) line+=' | @'+d.assignees.join(', @');
+      L.push(line);
+      if(d.notes) L.push('     Note: '+d.notes);
+    });
+  });
+
+  if(unplanned.length){
+    L.push('');
+    L.push('Unplanned (no carrier assigned):');
+    unplanned.forEach(d=>{
+      let line='  DO '+d.doNumber+' | '+d.client+' -> '+d.destination+' | '+d.status.toUpperCase();
+      if(d.assignees&&d.assignees.length) line+=' | @'+d.assignees.join(', @');
+      L.push(line);
+    });
+  }
+
+  // Open issues from previous days
+  const openIssues=state.dos.filter(d=>d.category==='Pending'||(['Blocked','Late','Vehicle Rejected'].includes(d.status)&&d.category!=='Today'&&d.category!=='Recovery'));
+  if(openIssues.length){
+    L.push('');
+    L.push('OPEN ISSUES (PREVIOUS DAYS)');
+    L.push(SEP2);
+    openIssues.forEach(d=>{
+      L.push('DO '+d.doNumber+' | '+d.client+' -> '+d.destination+' | '+d.status.toUpperCase()+' | Original date: '+(fmtDay(d.loadingDate)||'--'));
+      if(d.blocker) L.push('   Issue: '+d.blocker);
+      if(d.assignees&&d.assignees.length) L.push('   Assigned: @'+d.assignees.join(', @'));
+    });
+  }
+
+  L.push('');
+  L.push(SEP);
+  L.push('Tetra Pak Materials -- '+factoryName+' -- DMS Notes System');
+  L.push('Sent by: '+currentUser+' on '+dateStr);
+
+  const subject=encodeURIComponent('DMS Notes -- '+factoryName+' -- '+new Date().toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'}));
+  const body=encodeURIComponent(L.join('\n'));
+  window.open('mailto:?subject='+subject+'&body='+body);
+}
+
+// Close modals on overlay click
+['modal','status-modal','shipment-status-modal','inline-edit-modal','date-modal','move-modal','stat-modal','import-modal','export-modal'].forEach(id=>{
+  document.getElementById(id).addEventListener('click',e=>{if(e.target===document.getElementById(id))document.getElementById(id).classList.remove('open');});
+});
+</script>
+</body>
+</html>
