@@ -297,7 +297,7 @@ function ModuleView({ m, lang, tx, isLast, onPrev, onNext, onQuiz, showPrev }) {
       </div>
       {m.video && (
         <div className="bg-[#003865] rounded-xl overflow-hidden mb-5 shadow-lg">
-          <video controls className="w-full" style={{aspectRatio:'16/9'}} src={m.video}
+          <video controls controlsList="nodownload" onContextMenu={e => e.preventDefault()} className="w-full" style={{aspectRatio:'16/9'}} src={m.video}
             onError={e => { e.target.style.display='none'; e.target.parentElement.innerHTML+='<div style="aspect-ratio:16/9;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#002244,#003865);color:rgba(255,255,255,0.3);font-size:0.85rem">Video not found</div>' }} />
           <div className="px-4 py-2 text-xs text-white/40 border-t border-white/10">{d.tag} — {d.title}</div>
         </div>
