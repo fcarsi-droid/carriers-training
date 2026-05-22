@@ -184,7 +184,9 @@ export default function AdminPage() {
   }
 
   async function exportXLS() {
-    const { utils, writeFile } = await import('https://cdn.sheetjs.com/xlsx-0.20.0/package/xlsx.mjs')
+    const XLSX = await import('xlsx')
+    const utils = XLSX.utils
+    const writeFile = XLSX.writeFile
     const rows = [['Name','Username','Carrier','Role','Section','Score','Passed','Language','Date']]
     users.forEach(u => {
       if (!u.attempts || u.attempts.length === 0) {
