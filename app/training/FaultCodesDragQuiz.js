@@ -15,7 +15,6 @@ const round2 = [
   { code: 'DAA301', en: 'Delayed due to a Production Quality Issue', es: 'Retrasado debido a un problema de calidad de producción', pt: 'Atrasado devido a um problema de qualidade de produção' },
   { code: 'DAC302', en: 'Customer initiates ETA Change Request and TP agrees on a new ETA', es: 'El cliente solicita cambio de ETA y TP acuerda la nueva fecha', pt: 'O cliente solicita alteração de ETA e TP concorda com a nova data' },
   { code: 'DA9991', en: 'Arrival dates at OTM have not yet been entered — enter immediately', es: 'Las fechas de llegada en OTM aún no han sido ingresadas — ingréselas de inmediato', pt: 'As datas de chegada no OTM ainda não foram inseridas — insira imediatamente' },
-  { code: 'DA9992', en: 'Arrival dates at OTM have not yet been entered — enter immediately', es: 'Las fechas de llegada en OTM aún no han sido ingresadas — ingréselas de inmediato', pt: 'As datas de chegada no OTM ainda não foram inseridas — insira imediatamente' },
   { code: 'DA9993', en: 'Arrival date entered but reason for anticipation and/or delay was not included — enter the reason in OTM', es: 'Fecha de llegada ingresada pero sin el motivo de anticipación y/o retraso — ingréselo en OTM', pt: 'Data de chegada inserida mas o motivo da antecipação e/ou atraso não foi incluído — insira no OTM' },
 ]
 
