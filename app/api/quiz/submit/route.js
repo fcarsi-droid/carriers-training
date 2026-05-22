@@ -7,11 +7,10 @@ export async function POST(req) {
     const token = getTokenFromRequest(req)
     const user = verifyToken(token)
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-
-    const { score, passed, answers, language } = await req.json()
+    const { score, passed, answers, language, section } = await req.json()
     await query(
-      'INSERT INTO quiz_results (user_id, language, score, passed, answers) VALUES ($1, $2, $3, $4, $5)',
-      [user.id, language, score, passed, JSON.stringify(answers)]
+      'INSERT INTO quiz_results (user_id, language, score, passed, answers, section) VALUES ($1, $2, $3, $4, $5, $6)',
+      [user.id, language, score, passed, JSON.stringify(answers), section || 'basic']
     )
     return NextResponse.json({ success: true })
   } catch (e) {
@@ -24,12 +23,11 @@ export async function GET(req) {
     const token = getTokenFromRequest(req)
     const user = verifyToken(token)
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-
     const res = await query(
-      'SELECT score, passed, language, completed_at FROM quiz_results WHERE user_id = $1 ORDER BY completed_at DESC LIMIT 1',
+      'SELECT score, passed, language, section, completed_at FROM quiz_results WHERE user_id = $1 ORDER BY completed_at DESC',
       [user.id]
     )
-    return NextResponse.json({ result: res.rows[0] || null })
+    return NextResponse.json({ results: res.rows })
   } catch (e) {
     return NextResponse.json({ error: 'Server error' }, { status: 500 })
   }
