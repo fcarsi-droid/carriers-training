@@ -1,6 +1,7 @@
 'use client'
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import FaultCodesDragQuiz from './FaultCodesDragQuiz'
 
 const PASS_SCORE = 90
 
@@ -342,6 +343,22 @@ export default function TrainingPage() {
                 onNext={() => setCurrentModule(i => i+1)}
                 onQuiz={() => setShowQuiz(true)}
                 showPrev={currentModule > 0} />
+            ) : activeSection === 'fault-codes' ? (
+              <div>
+                <div className="mb-6">
+                  <span className="inline-block text-xs font-bold uppercase tracking-widest text-[#0078C8] bg-[#E8F3FB] px-3 py-1 rounded mb-3">★ {tx.finalQuiz}</span>
+                  <h2 className="text-3xl font-bold text-[#003865] mb-2" style={{fontFamily:'Georgia,serif'}}>{tx.quizTitle}</h2>
+                  <p className="text-gray-500 text-sm mb-6">{lang === 'en' ? 'Match each fault code to its correct description by dragging.' : lang === 'es' ? 'Relaciona cada código de falla con su descripción correcta arrastrándola.' : 'Relacione cada código de falha com sua descrição correta arrastando.'}</p>
+                </div>
+                <FaultCodesDragQuiz lang={lang} onScoreSave={async (score, passed) => {
+                  const token = localStorage.getItem('token')
+                  await fetch('/api/quiz/submit', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+                    body: JSON.stringify({ score, passed, answers: {}, language: lang, section: 'fault-codes' })
+                  })
+                }} />
+              </div>
             ) : (
               <QuizView modules={sectionModules} lang={lang} tx={tx}
                 answers={quizAnswers} setAnswers={setQuizAnswers}
