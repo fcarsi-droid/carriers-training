@@ -182,7 +182,7 @@ export default function TrainingPage() {
   useEffect(() => {
     const token = localStorage.getItem('token')
     if (!token) { router.push('/login'); return }
-    if (localStorage.getItem('role') === 'admin') { router.push('/admin'); return }
+    if (localStorage.getItem('role') === 'admin' || localStorage.getItem('role') === 'master') { router.push('/admin'); return }
     setUserName(localStorage.getItem('name') || '')
   }, [])
 

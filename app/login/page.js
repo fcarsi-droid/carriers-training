@@ -25,7 +25,7 @@ export default function LoginPage() {
       localStorage.setItem('name', data.name)
       localStorage.setItem('role', data.role)
       if (data.temp_password) router.push('/change-password')
-      else if (data.role === 'admin') router.push('/admin')
+      else if (data.role === 'admin' || data.role === 'master') router.push('/admin')
       else router.push('/training')
     } catch {
       setError('Connection error. Try again.')

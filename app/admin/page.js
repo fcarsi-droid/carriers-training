@@ -9,6 +9,8 @@ export default function AdminPage() {
   const [data, setData] = useState(null)
   const [users, setUsers] = useState([])
   const [loading, setLoading] = useState(true)
+  const [myRole, setMyRole] = useState('admin')
+  const isMaster = myRole === 'master'
   const [firstName, setFirstName] = useState('')
   const [lastName, setLastName] = useState('')
   const [carrier, setCarrier] = useState('')
@@ -28,7 +30,8 @@ export default function AdminPage() {
   function getToken() { return localStorage.getItem('token') }
 
   useEffect(() => {
-    if (localStorage.getItem('role') !== 'admin') { router.push('/login'); return }
+    if (localStorage.getItem('role') !== 'admin' && localStorage.getItem('role') !== 'master') { router.push('/login'); return }
+    setMyRole(localStorage.getItem('role') || 'admin')
     fetchAll()
   }, [])
 
@@ -372,10 +375,11 @@ export default function AdminPage() {
                 ))}
                 <div>
                   <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Role</label>
-                  <select value={role} onChange={e => setRole(e.target.value)}
-                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#0078C8]">
+                  <select value={role} onChange={e => setRole(e.target.value)} disabled={!isMaster}
+                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#0078C8] disabled:bg-gray-50 disabled:text-gray-400">
                     <option value="user">User</option>
-                    <option value="admin">Admin</option>
+                    {isMaster && <option value="admin">Admin</option>}
+                    {isMaster && <option value="master">Master</option>}
                   </select>
                 </div>
                 <button type="submit" disabled={createLoading}
@@ -433,7 +437,7 @@ export default function AdminPage() {
                             <div className="flex gap-3">
                               <button onClick={() => setEditUser({...u})} className="text-xs text-[#0078C8] hover:underline">Edit</button>
                               <button onClick={() => setResetUser(u)} className="text-xs text-amber-600 hover:underline">Reset pw</button>
-                              <button onClick={() => setDeleteUser(u)} className="text-xs text-red-500 hover:underline">Delete</button>
+                              {isMaster && <button onClick={() => setDeleteUser(u)} className="text-xs text-red-500 hover:underline">Delete</button>}
                             </div>
                           </td>
                         </tr>
@@ -535,10 +539,11 @@ export default function AdminPage() {
               </div>
               <div>
                 <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Role</label>
-                <select value={editUser.role} onChange={e => setEditUser({...editUser, role: e.target.value})}
-                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#0078C8]">
+                <select value={editUser.role} onChange={e => setEditUser({...editUser, role: e.target.value})} disabled={!isMaster}
+                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#0078C8] disabled:bg-gray-50 disabled:text-gray-400">
                   <option value="user">User</option>
-                  <option value="admin">Admin</option>
+                  {isMaster && <option value="admin">Admin</option>}
+                  {isMaster && <option value="master">Master</option>}
                 </select>
               </div>
               <div className="flex gap-3 pt-2">
