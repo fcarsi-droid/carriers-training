@@ -27,11 +27,27 @@ export default function AdminPage() {
   const canvasRef = useRef(null)
   const canvas2Ref = useRef(null)
 
-  function getToken() { return localStorage.getItem('token') }
+  function getToken() {
+    try {
+      const ls = localStorage.getItem('token')
+      if (ls && ls !== 'null' && ls !== 'undefined') return ls
+    } catch(e) {}
+    try {
+      const ss = sessionStorage.getItem('token')
+      if (ss && ss !== 'null' && ss !== 'undefined') return ss
+    } catch(e) {}
+    const match = document.cookie.match(/(?:^|;\s*)token=([^;]+)/)
+    return match ? decodeURIComponent(match[1]) : null
+  }
 
   useEffect(() => {
-    if (localStorage.getItem('role') !== 'admin' && localStorage.getItem('role') !== 'master') { router.push('/login'); return }
-    setMyRole(localStorage.getItem('role') || 'admin')
+    function getCookie(name) {
+      const match = document.cookie.match(new RegExp('(?:^|;\\s*)' + name + '=([^;]+)'))
+      return match ? decodeURIComponent(match[1]) : null
+    }
+    const role = localStorage.getItem('role') || getCookie('userRole')
+    if (role !== 'admin' && role !== 'master') { router.push('/login'); return }
+    setMyRole(role || 'admin')
     fetchAll()
   }, [])
 
@@ -264,7 +280,13 @@ export default function AdminPage() {
     setTimeout(() => w.print(), 500)
   }
 
-  function logout() { localStorage.clear(); router.push('/login') }
+  function logout() {
+    localStorage.clear()
+    document.cookie = 'token=; path=/; max-age=0'
+    document.cookie = 'userRole=; path=/; max-age=0'
+    document.cookie = 'userName=; path=/; max-age=0'
+    router.push('/login')
+  }
 
   const statusBadge = (u) => {
     const last = u.attempts?.[0]

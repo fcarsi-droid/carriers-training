@@ -180,13 +180,21 @@ export default function TrainingPage() {
   const router = useRouter()
 
   useEffect(() => {
-    const token = localStorage.getItem('token')
+    const token = localStorage.getItem('token') || document.cookie.match(/(?:^|;\s*)token=([^;]+)/)?.[1]
+    const role = localStorage.getItem('role') || document.cookie.match(/(?:^|;\s*)userRole=([^;]+)/)?.[1]
+    const name = localStorage.getItem('name') || decodeURIComponent(document.cookie.match(/(?:^|;\s*)userName=([^;]+)/)?.[1] || '')
     if (!token) { router.push('/login'); return }
-    if (localStorage.getItem('role') === 'admin' || localStorage.getItem('role') === 'master') { router.push('/admin'); return }
-    setUserName(localStorage.getItem('name') || '')
+    if (role === 'admin' || role === 'master') { router.push('/admin'); return }
+    setUserName(name || '')
   }, [])
 
-  function logout() { localStorage.clear(); router.push('/login') }
+  function logout() {
+    localStorage.clear()
+    document.cookie = 'token=; path=/; max-age=0'
+    document.cookie = 'userRole=; path=/; max-age=0'
+    document.cookie = 'userName=; path=/; max-age=0'
+    router.push('/login')
+  }
   const tx = labels[lang] || labels.en
   const isMFA = activeSection === 'mfa'
   const sectionModules = activeSection && !isMFA ? modules[activeSection] : []

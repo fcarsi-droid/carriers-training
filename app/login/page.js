@@ -21,9 +21,18 @@ export default function LoginPage() {
       })
       const data = await res.json()
       if (!res.ok) { setError(data.error); setLoading(false); return }
-      localStorage.setItem('token', data.token)
-      localStorage.setItem('name', data.name)
-      localStorage.setItem('role', data.role)
+      
+      // Save to both cookie and localStorage for reliability
+      document.cookie = `token=${data.token}; path=/; max-age=28800; SameSite=Lax`
+      document.cookie = `userRole=${data.role}; path=/; max-age=28800; SameSite=Lax`
+      document.cookie = `userName=${encodeURIComponent(data.name)}; path=/; max-age=28800; SameSite=Lax`
+      
+      try {
+        localStorage.setItem('token', data.token)
+        localStorage.setItem('name', data.name)
+        localStorage.setItem('role', data.role)
+      } catch(e) {}
+
       if (data.temp_password) router.push('/change-password')
       else if (data.role === 'admin' || data.role === 'master') router.push('/admin')
       else router.push('/training')
