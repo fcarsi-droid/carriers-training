@@ -11,7 +11,9 @@ function generatePassword(length = 10) {
 export async function POST(req) {
   const token = getTokenFromRequest(req)
   const user = verifyToken(token)
-  if (!user || user.role !== 'admin') return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+  if (!user || (user.role !== 'admin' && user.role !== 'master')) {
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+  }
   const { user_id } = await req.json()
   const temp_password = generatePassword()
   const hash = await bcrypt.hash(temp_password, 10)

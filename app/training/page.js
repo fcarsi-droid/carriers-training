@@ -219,7 +219,11 @@ export default function TrainingPage() {
     const token = localStorage.getItem('token')
     await fetch('/api/quiz/submit', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token ? { Authorization: `Bearer ${token}` } : {})
+      },
       body: JSON.stringify({ score, passed, answers: quizAnswers, language: lang, section: activeSection })
     })
   }

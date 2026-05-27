@@ -36,8 +36,27 @@ export default function AdminPage() {
       const ss = sessionStorage.getItem('token')
       if (ss && ss !== 'null' && ss !== 'undefined') return ss
     } catch(e) {}
-    const match = document.cookie.match(/(?:^|;\s*)token=([^;]+)/)
-    return match ? decodeURIComponent(match[1]) : null
+    return null
+  }
+
+  function authHeaders() {
+    const token = getToken()
+    return token
+      ? { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }
+      : { 'Content-Type': 'application/json' }
+  }
+
+  function authFetch(url, opts = {}) {
+    const token = getToken()
+    return fetch(url, {
+      ...opts,
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        ...(opts.headers || {})
+      }
+    })
   }
 
   useEffect(() => {
@@ -54,8 +73,8 @@ export default function AdminPage() {
   async function fetchAll() {
     setLoading(true)
     const [rep, usr] = await Promise.all([
-      fetch('/api/admin/reports', { headers: { Authorization: `Bearer ${getToken()}` } }).then(r => r.json()),
-      fetch('/api/admin/users', { headers: { Authorization: `Bearer ${getToken()}` } }).then(r => r.json())
+      authFetch('/api/admin/reports').then(r => r.json()),
+      authFetch('/api/admin/users').then(r => r.json())
     ])
     setData(rep)
     setUsers(usr.users || [])
@@ -158,9 +177,8 @@ export default function AdminPage() {
   async function createUser(e) {
     e.preventDefault()
     setCreateLoading(true); setCreateError(''); setNewCredentials(null)
-    const res = await fetch('/api/admin/users', {
+    const res = await authFetch('/api/admin/users', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${getToken()}` },
       body: JSON.stringify({ first_name: firstName, last_name: lastName, carrier, role })
     })
     const d = await res.json()
@@ -174,9 +192,8 @@ export default function AdminPage() {
 
   async function saveEdit(e) {
     e.preventDefault()
-    await fetch(`/api/admin/users/${editUser.id}`, {
+    await authFetch(`/api/admin/users/${editUser.id}`, {
       method: 'PATCH',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${getToken()}` },
       body: JSON.stringify({ name: editUser.name, carrier: editUser.carrier, role: editUser.role })
     })
     setEditUser(null); setMsg('User updated.'); fetchAll()
@@ -184,17 +201,14 @@ export default function AdminPage() {
   }
 
   async function confirmDelete() {
-    await fetch(`/api/admin/users/${deleteUser.id}`, {
-      method: 'DELETE', headers: { Authorization: `Bearer ${getToken()}` }
-    })
+    await authFetch(`/api/admin/users/${deleteUser.id}`, { method: 'DELETE' })
     setDeleteUser(null); setMsg('User deleted.'); fetchAll()
     setTimeout(() => setMsg(''), 3000)
   }
 
   async function resetPassword() {
-    const res = await fetch('/api/admin/reset-password', {
+    const res = await authFetch('/api/admin/reset-password', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${getToken()}` },
       body: JSON.stringify({ user_id: resetUser.id })
     })
     const d = await res.json()

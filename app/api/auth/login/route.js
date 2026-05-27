@@ -14,39 +14,23 @@ export async function POST(req) {
     if (!valid) return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 })
 
     const token = signToken({ id: user.id, username: user.username, role: user.role, temp_password: user.temp_password })
-    
-    const response = NextResponse.json({ 
-      token, 
-      temp_password: user.temp_password, 
-      role: user.role, 
-      name: user.name 
+
+    const response = NextResponse.json({
+      token,
+      temp_password: user.temp_password,
+      role: user.role,
+      name: user.name
     })
-    
-    // Set httpOnly cookie - persists across redirects
-    response.cookies.set('token', token, {
-      httpOnly: false,
-      secure: true,
-      sameSite: 'lax',
-      maxAge: 60 * 60 * 8, // 8 hours
-      path: '/'
-    })
-    response.cookies.set('userRole', user.role, {
-      httpOnly: false,
-      secure: true,
-      sameSite: 'lax',
-      maxAge: 60 * 60 * 8,
-      path: '/'
-    })
-    response.cookies.set('userName', user.name, {
-      httpOnly: false,
-      secure: true,
-      sameSite: 'lax',
-      maxAge: 60 * 60 * 8,
-      path: '/'
-    })
-    
+
+    // Set cookies via response headers for reliability
+    const cookieOpts = 'Path=/; Max-Age=28800; SameSite=Lax; Secure'
+    response.headers.append('Set-Cookie', `token=${token}; ${cookieOpts}`)
+    response.headers.append('Set-Cookie', `userRole=${user.role}; ${cookieOpts}`)
+    response.headers.append('Set-Cookie', `userName=${encodeURIComponent(user.name)}; ${cookieOpts}`)
+
     return response
   } catch (e) {
+    console.error('Login error:', e)
     return NextResponse.json({ error: 'Server error' }, { status: 500 })
   }
 }
