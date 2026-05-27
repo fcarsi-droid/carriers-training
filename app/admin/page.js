@@ -451,7 +451,7 @@ export default function AdminPage() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-50">
-                    {users.map(u => (
+                    {(data?.users || users).map(u => (
                       <>
                         <tr key={u.id} className="hover:bg-gray-50">
                           <td className="py-3 pr-4 font-medium text-[#003865]">{u.name}</td>
@@ -500,8 +500,8 @@ export default function AdminPage() {
         {/* RANKING TAB */}
         {tab === 'ranking' && (
           <div className="space-y-6">
-            {(data?.byCarrier || []).filter(c => c.carrier).map(c => {
-              const members = users.filter(u => u.carrier === c.carrier)
+            {(data?.byCarrier || []).filter(c => c.carrier && c.carrier !== 'No carrier').map(c => {
+              const members = (data?.users || []).filter(u => u.carrier === c.carrier)
               return (
                 <div key={c.carrier} className="bg-white rounded-2xl shadow-sm overflow-hidden">
                   <div className="bg-[#003865] px-6 py-4 flex items-center justify-between">
