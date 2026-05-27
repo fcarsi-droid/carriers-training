@@ -5,10 +5,9 @@ import { NextResponse } from 'next/server'
 export async function GET(req) {
   const token = getTokenFromRequest(req)
   const user = verifyToken(token)
-  if (!user || user.role !== 'admin') return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+  if (!user || (user.role !== 'admin' && user.role !== 'master')) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
 
   try {
-    // Overall stats
     const overall = await query(`
       SELECT
         COUNT(DISTINCT u.id) as total_users,
@@ -21,7 +20,6 @@ export async function GET(req) {
       WHERE u.role = 'user'
     `)
 
-    // By carrier
     const byCarrier = await query(`
       SELECT
         COALESCE(u.carrier, 'No carrier') as carrier,
@@ -40,7 +38,6 @@ export async function GET(req) {
       ORDER BY avg_score DESC NULLS LAST
     `)
 
-    // Weekly completions (last 8 weeks)
     const weekly = await query(`
       SELECT
         DATE_TRUNC('week', completed_at)::date as week,
@@ -53,7 +50,6 @@ export async function GET(req) {
       ORDER BY week ASC
     `)
 
-    // All users with full history
     const users = await query(`
       SELECT
         u.id, u.name, u.username, u.carrier, u.role, u.temp_password, u.created_at,
