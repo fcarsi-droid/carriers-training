@@ -67,9 +67,8 @@ export async function GET(req) {
         ) as attempts
       FROM users u
       LEFT JOIN quiz_results qr ON qr.user_id = u.id
-      WHERE u.role = 'user'
       GROUP BY u.id, u.name, u.username, u.carrier, u.role, u.temp_password, u.created_at
-      ORDER BY u.carrier NULLS LAST, u.name
+      ORDER BY u.role, u.carrier NULLS LAST, u.name
     `)
 
     return NextResponse.json({
