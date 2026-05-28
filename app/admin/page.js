@@ -324,6 +324,7 @@ export default function AdminPage() {
         <div><div className="font-bold text-lg">OTM Carriers Training</div><div className="text-xs opacity-60">Admin Panel</div></div>
         <div className="flex items-center gap-3">
           {msg && <span className="text-xs bg-green-500/20 border border-green-400/30 text-green-300 px-3 py-1 rounded-full">{msg}</span>}
+          <button onClick={() => router.push('/training')} className="text-xs bg-white/10 hover:bg-white/20 px-4 py-2 rounded-full transition">🎓 Training</button>
           <button onClick={logout} className="text-xs bg-white/10 hover:bg-white/20 px-4 py-2 rounded-full transition">Logout</button>
         </div>
       </header>
