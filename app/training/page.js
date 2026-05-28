@@ -184,7 +184,6 @@ export default function TrainingPage() {
     const role = localStorage.getItem('role') || document.cookie.match(/(?:^|;\s*)userRole=([^;]+)/)?.[1]
     const name = localStorage.getItem('name') || decodeURIComponent(document.cookie.match(/(?:^|;\s*)userName=([^;]+)/)?.[1] || '')
     if (!token) { router.push('/login'); return }
-    if (role === 'admin' || role === 'master') { router.push('/admin'); return }
     setUserName(name || '')
   }, [])
 
