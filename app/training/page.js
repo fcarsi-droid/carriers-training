@@ -161,9 +161,9 @@ const modules = {
 }
 
 const labels = {
-  en:{modules:'Modules',finalQuiz:'Final Quiz',prev:'← Previous',next:'Next →',goQuiz:'Go to Final Quiz →',quizTitle:'Final Knowledge Check',quizDesc:'Answer all questions. You need 90% or more to pass.',submit:'Submit Quiz',restart:'Restart',pass:'Congratulations! You passed.',fail:'You did not reach the minimum score of 90%.',review:'Modules to review:',logout:'Logout',selectSection:'Select a training section to begin',glossary:'Glossary',backToSections:'← Back to sections',faultCodesTable:'Fault Codes Table',mfaTitle:'MFA Setup Guide',mfaDesc:'Step-by-step guide to configure Multi-Factor Authentication for OTM access.',noQuiz:'This section has no quiz — it is a reference guide.',code:'Code',category:'Category',description:'Description'},
-  es:{modules:'Módulos',finalQuiz:'Quiz Final',prev:'← Anterior',next:'Siguiente →',goQuiz:'Ir al Quiz Final →',quizTitle:'Verificación Final',quizDesc:'Responde todas las preguntas. Necesitas 90% o más para aprobar.',submit:'Enviar Quiz',restart:'Reiniciar',pass:'¡Felicitaciones! Aprobaste.',fail:'No alcanzaste la puntuación mínima del 90%.',review:'Módulos para revisar:',logout:'Cerrar sesión',selectSection:'Selecciona una sección de capacitación para comenzar',glossary:'Glosario',backToSections:'← Volver a secciones',faultCodesTable:'Tabla de Códigos de Falla',mfaTitle:'Guía de Configuración MFA',mfaDesc:'Guía paso a paso para configurar la Autenticación Multifactor para acceder a OTM.',noQuiz:'Esta sección no tiene quiz — es una guía de referencia.',code:'Código',category:'Categoría',description:'Descripción'},
-  pt:{modules:'Módulos',finalQuiz:'Quiz Final',prev:'← Anterior',next:'Próximo →',goQuiz:'Ir para o Quiz Final →',quizTitle:'Verificação Final',quizDesc:'Responda todas as perguntas. Você precisa de 90% ou mais para passar.',submit:'Enviar Quiz',restart:'Reiniciar',pass:'Parabéns! Você passou.',fail:'Você não atingiu a pontuação mínima de 90%.',review:'Módulos para revisar:',logout:'Sair',selectSection:'Selecione uma seção de treinamento para começar',glossary:'Glossário',backToSections:'← Voltar às seções',faultCodesTable:'Tabela de Códigos de Falha',mfaTitle:'Guia de Configuração MFA',mfaDesc:'Guia passo a passo para configurar a Autenticação Multifator para acesso ao OTM.',noQuiz:'Esta seção não tem quiz — é um guia de referência.',code:'Código',category:'Categoria',description:'Descrição'}
+  en:{modules:'Modules',finalQuiz:'Final Quiz',prev:'← Previous',next:'Next →',goQuiz:'Go to Final Quiz →',quizTitle:'Final Knowledge Check',quizDesc:'Answer all questions. You need 90% or more to pass.',submit:'Submit Quiz',restart:'Restart',pass:'Congratulations! You passed.',fail:'You did not reach the minimum score of 90%.',review:'Modules to review:',logout:'Logout',selectSection:'Select a training section to begin',glossary:'Glossary',backToSections:'← Back to sections',faultCodesTable:'Fault Codes Table',mfaTitle:'MFA Setup Guide',mfaDesc:'Step-by-step guide to configure Multi-Factor Authentication for OTM access.',noQuiz:'This section has no quiz — it is a reference guide.',code:'Code',category:'Category',description:'Description',downloadPdf:'⬇ PDF'},
+  es:{modules:'Módulos',finalQuiz:'Quiz Final',prev:'← Anterior',next:'Siguiente →',goQuiz:'Ir al Quiz Final →',quizTitle:'Verificación Final',quizDesc:'Responde todas las preguntas. Necesitas 90% o más para aprobar.',submit:'Enviar Quiz',restart:'Reiniciar',pass:'¡Felicitaciones! Aprobaste.',fail:'No alcanzaste la puntuación mínima del 90%.',review:'Módulos para revisar:',logout:'Cerrar sesión',selectSection:'Selecciona una sección de capacitación para comenzar',glossary:'Glosario',backToSections:'← Volver a secciones',faultCodesTable:'Tabla de Códigos de Falla',mfaTitle:'Guía de Configuración MFA',mfaDesc:'Guía paso a paso para configurar la Autenticación Multifactor para acceder a OTM.',noQuiz:'Esta sección no tiene quiz — es una guía de referencia.',code:'Código',category:'Categoría',description:'Descripción',downloadPdf:'⬇ PDF'},
+  pt:{modules:'Módulos',finalQuiz:'Quiz Final',prev:'← Anterior',next:'Próximo →',goQuiz:'Ir para o Quiz Final →',quizTitle:'Verificação Final',quizDesc:'Responda todas as perguntas. Você precisa de 90% ou mais para passar.',submit:'Enviar Quiz',restart:'Reiniciar',pass:'Parabéns! Você passou.',fail:'Você não atingiu a pontuação mínima de 90%.',review:'Módulos para revisar:',logout:'Sair',selectSection:'Selecione uma seção de treinamento para começar',glossary:'Glossário',backToSections:'← Voltar às seções',faultCodesTable:'Tabela de Códigos de Falha',mfaTitle:'Guia de Configuração MFA',mfaDesc:'Guia passo a passo para configurar a Autenticação Multifator para acesso ao OTM.',noQuiz:'Esta seção não tem quiz — é um guia de referência.',code:'Código',category:'Categoria',description:'Descrição',downloadPdf:'⬇ PDF'}
 }
 
 export default function TrainingPage() {
@@ -194,6 +194,45 @@ export default function TrainingPage() {
     document.cookie = 'userRole=; path=/; max-age=0'
     document.cookie = 'userName=; path=/; max-age=0'
     router.push('/login')
+  }
+
+  function exportPDF() {
+    const sectionLabel = sections.find(s => s.slug === activeSection)?.[lang] || activeSection
+    const mods = sectionModules
+    let html = `<html><head><meta charset="UTF-8"><title>${sectionLabel}</title>
+    <style>
+      body{font-family:Arial,sans-serif;color:#1a1a2e;margin:40px;line-height:1.6;font-size:12px}
+      h1{color:#003865;font-size:20px;border-bottom:2px solid #003865;padding-bottom:8px;margin-bottom:4px}
+      h2{color:#003865;font-size:15px;margin-top:28px;margin-bottom:6px}
+      h3{color:#005B9A;font-size:12px;margin-top:14px;margin-bottom:4px;font-weight:bold}
+      p{margin:4px 0;color:#4A5568}
+      ul{margin:4px 0 8px 0;padding-left:18px}
+      li{margin-bottom:2px;color:#4A5568}
+      .tag{font-size:10px;color:#0078C8;text-transform:uppercase;letter-spacing:1px;font-weight:bold}
+      .module{page-break-inside:avoid;margin-bottom:28px;border-left:3px solid #BDD9EF;padding-left:16px}
+      .cover{text-align:center;margin-bottom:40px;padding:32px;border:1px solid #BDD9EF;border-radius:8px}
+    </style></head><body>
+    <div class="cover">
+      <h1 style="border:none;font-size:24px">OTM Carriers Training</h1>
+      <p style="color:#8A9BB0">${sectionLabel}</p>
+      <p style="margin-top:8px;font-size:10px;color:#aaa">${new Date().toLocaleDateString()}</p>
+    </div>`
+
+    mods.forEach(m => {
+      const d = m[lang]
+      html += `<div class="module">
+        <div class="tag">${d.tag}</div>
+        <h2>${d.title}</h2>
+        <p><em>${d.desc}</em></p>
+        ${d.content}
+      </div>`
+    })
+
+    html += `</body></html>`
+    const w = window.open('', '_blank')
+    w.document.write(html)
+    w.document.close()
+    setTimeout(() => w.print(), 500)
   }
   const tx = labels[lang] || labels.en
   const isMFA = activeSection === 'mfa'
@@ -255,10 +294,13 @@ export default function TrainingPage() {
     <div className="min-h-screen bg-gray-50">
       <header className="bg-[#003865] text-white px-6 h-16 flex items-center justify-between sticky top-0 z-50 shadow-lg">
         <div><div className="font-bold">OTM Carriers Training</div><div className="text-xs opacity-60">{userName}</div></div>
-        <div className="flex items-center gap-3">
+        <div class="flex items-center gap-3">
           <select value={lang} onChange={e => setLang(e.target.value)} className="bg-white/10 border border-white/20 text-white text-xs rounded-full px-3 py-1 focus:outline-none">
             <option value="en">🇺🇸 EN</option><option value="es">🇪🇸 ES</option><option value="pt">🇧🇷 PT</option>
           </select>
+          {activeSection && !isMFA && (
+            <button onClick={exportPDF} className="text-xs bg-white/10 hover:bg-white/20 px-4 py-1.5 rounded-full transition">{tx.downloadPdf}</button>
+          )}
           <button onClick={logout} className="text-xs bg-white/10 hover:bg-white/20 px-4 py-1.5 rounded-full transition">{tx.logout}</button>
         </div>
       </header>
